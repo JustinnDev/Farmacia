@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Producto - FarmaYa{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    {% if product.main_image %}
+                        <img src="{{ product.main_image.url }}" alt="{{ product.name }}"
+                             class="img-fluid rounded" style="max-height: 150px;">
+                    {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center rounded mx-auto"
+                             style="height: 150px; width: 150px;">
+                            <i class="fas fa-pills fa-3x text-muted"></i>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <h4 class="text-center mb-3">{{ product.name }}</h4>
+
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-exclamation-triangle"></i> ¿Estás seguro de que deseas eliminar este producto?</h6>
+                    <p class="mb-0">Esta acción no se puede deshacer. El producto será eliminado permanentemente de tu catálogo.</p>
+                </div>
+
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <strong>Categoría:</strong><br>
+                        {{ product.category.name }}
+                    </div>
+                    <div class="col-6">
+                        <strong>Precio:</strong><br>
+                        {{ product.discounted_price }} Bs
+                    </div>
+                </div>
+
+                <div class="row text-center mb-4">
+                    <div class="col-6">
+                        <strong>Stock:</strong><br>
+                        {{ product.stock_quantity }} unidades
+                    </div>
+                    <div class="col-6">
+                        <strong>Estado:</strong><br>
+                        {% if product.is_active %}
+                            <span class="badge bg-success">Activo</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactivo</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% comment %} Verificar si el producto tiene órdenes pendientes {% endcomment %}
+                {% if product.order_items.filter(order__order_status__in=['pending', 'paid', 'confirmed', 'preparing', 'ready_for_delivery', 'in_delivery']).exists %}
+                    <div class="alert alert-danger">
+                        <h6><i class="fas fa-times-circle"></i> No se puede eliminar</h6>
+                        <p class="mb-0">Este producto tiene órdenes pendientes o en proceso. No se puede eliminar hasta que todas las órdenes sean completadas o canceladas.</p>
+                    </div>
+
+                    <div class="text-center">
+                        <a href="{% url 'products:pharmacy_products' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver a Mis Productos
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Información</h6>
+                        <p class="mb-0">Este producto no tiene órdenes pendientes y puede ser eliminado de forma segura.</p>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'products:pharmacy_products' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Sí, Eliminar Producto
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

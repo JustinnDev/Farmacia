@@ -144,14 +144,84 @@
             </div>
         </div>
 
-        <!-- Enlace a la página de farmacia -->
+        <!-- Gestión de productos -->
         <div class="card mt-4">
-            <div class="card-body text-center">
-                <h5>Tu Página de Farmacia</h5>
-                <p>Esta es la página que verán tus clientes cuando busquen tu farmacia.</p>
-                <a href="{% url 'users:pharmacy_detail' profile.id %}" class="btn btn-outline-primary">
-                    <i class="fas fa-external-link-alt"></i> Ver Mi Página de Farmacia
-                </a>
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-boxes"></i> Gestión de Productos</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <a href="{% url 'products:product_create' %}" class="btn btn-success w-100">
+                            <i class="fas fa-plus"></i> Agregar Producto
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{% url 'products:pharmacy_products' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-list"></i> Ver Mis Productos
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{% url 'users:pharmacy_detail' profile.id %}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-external-link-alt"></i> Ver Mi Página
+                        </a>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <strong>Estadísticas:</strong>
+                        {% with active_count=profile.products.filter|length %}
+                            {{ active_count }} productos activos,
+                            {{ profile.products.count }} productos totales
+                        {% endwith %}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Órdenes recientes -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-shopping-cart"></i> Órdenes Recientes</h5>
+            </div>
+            <div class="card-body">
+                {% if profile.orders.exists %}
+                    <div class="list-group list-group-flush">
+                        {% for order in profile.orders.all|slice:":5" %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Orden #{{ order.order_number }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ order.created_at|date:"d/m/Y H:i" }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge
+                                            {% if order.order_status == 'pending' %}bg-warning
+                                            {% elif order.order_status == 'paid' %}bg-info
+                                            {% elif order.order_status == 'confirmed' %}bg-primary
+                                            {% elif order.order_status == 'preparing' %}bg-secondary
+                                            {% elif order.order_status == 'ready_for_delivery' %}bg-success
+                                            {% elif order.order_status == 'in_delivery' %}bg-info
+                                            {% elif order.order_status == 'delivered' %}bg-success
+                                            {% else %}bg-danger{% endif %}">
+                                            {{ order.get_order_status_display }}
+                                        </span>
+                                        <br>
+                                        <small class="text-muted">{{ order.total }} Bs</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3 text-center">
+                        <a href="{% url 'orders:order_list' %}" class="btn btn-outline-primary btn-sm">
+                            Ver Todas las Órdenes
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-center text-muted mb-0">Aún no tienes órdenes.</p>
+                {% endif %}
             </div>
         </div>
     </div>

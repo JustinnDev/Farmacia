@@ -143,10 +143,19 @@ def payment(request, order_id):
 @login_required
 def order_detail(request, order_id):
     """Vista detallada de una orden"""
-    order = get_object_or_404(Order, id=order_id, client__user=request.user)
+    # Permitir acceso tanto a clientes como a farmacias propietarias de la orden
+    if request.user.user_type == 'client':
+        order = get_object_or_404(Order, id=order_id, client__user=request.user)
+    else:
+        # Para farmacias, verificar que la orden pertenece a sus productos
+        from users.models import PharmacyProfile
+        pharmacy = get_object_or_404(PharmacyProfile, user=request.user)
+        order = get_object_or_404(Order, id=order_id, pharmacy=pharmacy)
 
-    # Verificar si se puede dejar reseña
-    can_review = order.order_status == 'delivered' and not hasattr(order, 'review')
+    # Verificar si se puede dejar reseña (solo para clientes)
+    can_review = (request.user.user_type == 'client' and
+                  order.order_status == 'delivered' and
+                  not hasattr(order, 'review'))
 
     context = {
         'order': order,
@@ -158,6 +167,8 @@ def order_detail(request, order_id):
 @login_required
 def order_list(request):
     """Lista de órdenes del usuario"""
+    from users.models import PharmacyProfile
+
     if request.user.user_type == 'client':
         client_profile = get_object_or_404(ClientProfile, user=request.user)
         orders = Order.objects.filter(client=client_profile).order_by('-created_at')
