@@ -1,31 +1,31 @@
 /* FarmaYa - Canva-inspired Design System */
 
-/* Color Palette - Canva Inspired */
+/* Color Palette - Minimalist & Elegant */
 :root {
-    --canva-primary: #00C4CC;
-    --canva-secondary: #FF6B6B;
-    --canva-accent: #4ECDC4;
-    --canva-dark: #2C3E50;
-    --canva-light: #F8F9FA;
-    --canva-gray-50: #F8F9FA;
-    --canva-gray-100: #E9ECEF;
-    --canva-gray-200: #DEE2E6;
-    --canva-gray-300: #CED4DA;
-    --canva-gray-400: #ADB5BD;
-    --canva-gray-500: #6C757D;
-    --canva-gray-600: #495057;
-    --canva-gray-700: #343A40;
-    --canva-gray-800: #212529;
-    --canva-gray-900: #000000;
-    --canva-success: #51CF66;
-    --canva-warning: #FFD43B;
-    --canva-danger: #FF6B6B;
-    --canva-info: #74C0FC;
+    --canva-primary: #374151;      /* Charcoal Gray */
+    --canva-secondary: #F59E0B;    /* Warm Amber */
+    --canva-accent: #10B981;       /* Sage Green */
+    --canva-dark: #1F2937;         /* Dark Slate */
+    --canva-light: #F9FAFB;        /* Pure White */
+    --canva-gray-50: #F9FAFB;
+    --canva-gray-100: #F3F4F6;
+    --canva-gray-200: #E5E7EB;
+    --canva-gray-300: #D1D5DB;
+    --canva-gray-400: #9CA3AF;
+    --canva-gray-500: #6B7280;
+    --canva-gray-600: #4B5563;
+    --canva-gray-700: #374151;
+    --canva-gray-800: #1F2937;
+    --canva-gray-900: #111827;
+    --canva-success: #10B981;
+    --canva-warning: #F59E0B;
+    --canva-danger: #EF4444;
+    --canva-info: #3B82F6;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, #00C4CC 0%, #4ECDC4 100%);
-    --gradient-secondary: linear-gradient(135deg, #FF6B6B 0%, #FFA726 100%);
-    --gradient-accent: linear-gradient(135deg, #4ECDC4 0%, #00C4CC 100%);
+    --gradient-primary: linear-gradient(135deg, #374151 0%, #4B5563 100%);
+    --gradient-secondary: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+    --gradient-accent: linear-gradient(135deg, #10B981 0%, #34D399 100%);
 
     /* Shadows */
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -48,7 +48,7 @@
 /* Global Styles */
 body {
     font-family: var(--font-primary);
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--canva-light);
     min-height: 100vh;
     color: var(--canva-gray-800);
     line-height: 1.6;
@@ -348,22 +348,238 @@ footer a:hover {
     animation: fadeInUp 0.6s ease-out;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .jumbotron {
-        padding: 2rem 1rem;
+/* Responsive Design - Mobile First Approach */
+
+/* Extra Small Devices (phones, <576px) */
+@media (max-width: 575.98px) {
+    /* Global */
+    body {
+        font-size: 14px;
+        line-height: 1.4;
     }
 
-    .jumbotron h1 {
-        font-size: 2rem;
+    /* Navigation */
+    .navbar {
+        padding: 0.5rem;
     }
 
     .navbar-brand {
         font-size: 1.25rem;
     }
 
+    .navbar-nav .nav-link {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    /* Hero Section */
+    .hero-section {
+        min-height: 60vh;
+        padding: 2rem 1rem;
+    }
+
+    .hero-section h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .hero-section .lead {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-section .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Cards */
+    .card {
+        margin-bottom: 1rem;
+        border-radius: var(--radius-md);
+    }
+
+    .card-header {
+        padding: 1rem;
+        font-size: 1rem;
+    }
+
     .card-body {
+        padding: 1rem;
+    }
+
+    /* Features Section */
+    .features-section {
+        padding: 2rem 0;
+    }
+
+    .feature-card {
+        margin-bottom: 1.5rem;
         padding: 1.5rem;
+    }
+
+    .feature-icon {
+        margin-bottom: 1rem;
+    }
+
+    .feature-icon i {
+        font-size: 3rem;
+    }
+
+    /* Product Grid */
+    .product-grid .col-md-4 {
+        margin-bottom: 1rem;
+    }
+
+    /* Forms */
+    .form-control, .form-select {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 0.75rem;
+    }
+
+    .btn {
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Tables */
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+
+    .table td, .table th {
+        padding: 0.5rem;
+    }
+
+    /* Order Details */
+    .order-item {
+        padding: 1rem 0;
+    }
+
+    .order-item img {
+        width: 60px;
+        height: 60px;
+    }
+
+    /* Cart */
+    .cart-item {
+        padding: 1rem 0;
+    }
+
+    .cart-item img {
+        width: 60px;
+        height: 60px;
+    }
+
+    /* Footer */
+    footer {
+        padding: 2rem 1rem 1rem;
+        text-align: center;
+    }
+
+    footer .row > div {
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Small Devices (tablets, >=576px) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .hero-section h1 {
+        font-size: 2.5rem;
+    }
+
+    .feature-card {
+        padding: 2rem;
+    }
+
+    .btn {
+        width: auto;
+    }
+}
+
+/* Medium Devices (tablets, >=768px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .hero-section {
+        min-height: 65vh;
+    }
+
+    .hero-section h1 {
+        font-size: 2.75rem;
+    }
+
+    .features-section {
+        padding: 3rem 0;
+    }
+
+    .feature-card {
+        padding: 2.5rem;
+    }
+}
+
+/* Large Devices (desktops, >=992px) */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    .hero-section h1 {
+        font-size: 3rem;
+    }
+}
+
+/* Extra Large Devices (large desktops, >=1200px) */
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1400px;
+    }
+
+    .hero-section h1 {
+        font-size: 3.5rem;
+    }
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+    .btn {
+        min-height: 44px;
+        font-size: 1.1rem;
+    }
+
+    .nav-link {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+
+    .card:hover {
+        transform: none;
+    }
+
+    .product-card:hover {
+        transform: none;
+    }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .hero-section::before {
+        background-size: 50px 50px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar,
+    .btn,
+    footer {
+        display: none !important;
+    }
+
+    .card {
+        border: 1px solid #000;
+        box-shadow: none;
+    }
+
+    body {
+        background: white !important;
     }
 }
 
@@ -690,7 +906,7 @@ footer {
 
 /* Hero Section Styles */
 .hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--canva-primary) 0%, var(--canva-accent) 100%);
     min-height: 70vh;
     display: flex;
     align-items: center;
