@@ -25,7 +25,7 @@ class OrderForm(forms.ModelForm):
 class PaymentForm(forms.Form):
     payment_method = forms.ChoiceField(
         choices=[
-            ('c2p', 'Pago Móvil C2P'),
+            ('c2p', 'Pago Móvil C2P (Convertir USD a VES usando tasa BCV)'),
             ('paypal', 'PayPal'),
             ('stripe', 'Stripe'),
             ('bank_transfer', 'Transferencia Bancaria'),

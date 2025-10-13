@@ -27,8 +27,8 @@ class Product(models.Model):
     sku = models.CharField(max_length=100, unique=True, verbose_name='SKU')
 
     # Pricing
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Precio (Bs)')
-    original_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Precio Original (Bs)')
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Precio (USD)')
+    original_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Precio Original (USD)')
     discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name='Descuento (%)')
 
     # Stock and availability
@@ -66,6 +66,16 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         if self.original_price and self.original_price > self.price:
             self.discount_percentage = ((self.original_price - self.price) / self.original_price) * 100
+
+        # Auto-generar SKU si no está establecido
+        if not self.sku:
+            import uuid
+            # Generar SKU único basado en farmacia y nombre del producto
+            base_sku = f"{self.pharmacy.pharmacy_name[:3].upper()}-{self.name[:10].replace(' ', '-').upper()}"
+            # Agregar sufijo único para evitar colisiones
+            unique_suffix = str(uuid.uuid4())[:8].upper()
+            self.sku = f"{base_sku}-{unique_suffix}"
+
         super().save(*args, **kwargs)
 
 

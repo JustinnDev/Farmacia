@@ -105,11 +105,11 @@
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         {% if product.is_on_sale %}
                                             <div>
-                                                <span class="text-decoration-line-through text-muted">{{ product.price }} Bs</span>
-                                                <span class="fw-bold text-danger">{{ product.discounted_price }} Bs</span>
+                                                <span class="text-decoration-line-through text-muted">{{ product.price }} USD</span>
+                                                <span class="fw-bold text-danger">{{ product.discounted_price }} USD</span>
                                             </div>
                                         {% else %}
-                                            <span class="fw-bold">{{ product.price }} Bs</span>
+                                            <span class="fw-bold">{{ product.price }} USD</span>
                                         {% endif %}
 
                                         {% if product.pharmacy.rating %}

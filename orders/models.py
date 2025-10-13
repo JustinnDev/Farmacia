@@ -34,10 +34,10 @@ class Order(models.Model):
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending', verbose_name='Estado del Pago')
 
     # Pricing
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Subtotal')
-    tax = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Impuestos')
-    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Costo de Entrega')
-    total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Total')
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Subtotal (USD)')
+    tax = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Impuestos (USD)')
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Costo de Entrega (USD)')
+    total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Total (USD)')
 
     # Delivery information
     delivery_type = models.CharField(max_length=20, choices=[
@@ -115,8 +115,8 @@ class Payment(models.Model):
     c2p_reference = models.CharField(max_length=100, blank=True, verbose_name='Referencia C2P')
 
     # Payment details
-    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Monto')
-    currency = models.CharField(max_length=3, default='VES', verbose_name='Moneda')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Monto (USD)')
+    currency = models.CharField(max_length=3, default='USD', verbose_name='Moneda')
     transaction_id = models.CharField(max_length=100, blank=True, verbose_name='ID de Transacción')
     payment_date = models.DateTimeField(null=True, blank=True, verbose_name='Fecha de Pago')
 

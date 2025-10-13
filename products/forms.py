@@ -3,18 +3,30 @@ from .models import Product, Category, ProductImage, ProductVariant
 
 
 class ProductForm(forms.ModelForm):
+    sku = forms.CharField(
+        required=False,
+        label='SKU',
+        help_text='Deja vacío para generar automáticamente',
+        widget=forms.TextInput(attrs={'placeholder': 'Se generará automáticamente'})
+    )
+
     class Meta:
         model = Product
         fields = [
-            'name', 'description', 'category', 'brand', 'price',
+            'name', 'description', 'category', 'brand', 'sku', 'price',
             'original_price', 'stock_quantity', 'requires_prescription',
             'main_image'
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
-            'price': forms.NumberInput(attrs={'step': '0.01'}),
-            'original_price': forms.NumberInput(attrs={'step': '0.01'}),
+            'price': forms.NumberInput(attrs={'step': '0.01', 'placeholder': 'Precio en USD'}),
+            'original_price': forms.NumberInput(attrs={'step': '0.01', 'placeholder': 'Precio original en USD'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Hacer SKU opcional en el formulario
+        self.fields['sku'].required = False
 
 
 class ProductVariantForm(forms.ModelForm):

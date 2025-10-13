@@ -64,14 +64,14 @@
                 <div class="mb-3">
                     {% if product.is_on_sale %}
                         <h3 class="text-danger">
-                            {{ product.discounted_price }} Bs
+                            {{ product.discounted_price }} USD
                             <small class="text-decoration-line-through text-muted ms-2">
-                                {{ product.price }} Bs
+                                {{ product.price }} USD
                             </small>
                         </h3>
                         <span class="badge bg-danger">{{ product.discount_percentage }}% OFF</span>
                     {% else %}
-                        <h3>{{ product.price }} Bs</h3>
+                        <h3>{{ product.price }} USD</h3>
                     {% endif %}
                 </div>
 
@@ -171,7 +171,7 @@
                                 </a>
                             </h6>
                             <p class="card-text text-muted small">{{ related_product.pharmacy.pharmacy_name }}</p>
-                            <p class="card-text fw-bold">{{ related_product.discounted_price }} Bs</p>
+                            <p class="card-text fw-bold">{{ related_product.discounted_price }} USD</p>
                         </div>
                     </div>
                 </div>

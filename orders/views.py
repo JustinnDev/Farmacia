@@ -146,20 +146,25 @@ def order_detail(request, order_id):
     # Permitir acceso tanto a clientes como a farmacias propietarias de la orden
     if request.user.user_type == 'client':
         order = get_object_or_404(Order, id=order_id, client__user=request.user)
+        # Para clientes: mostrar opciones de pago y reseña
+        can_review = (order.order_status == 'delivered' and not hasattr(order, 'review'))
+        can_pay = (order.payment_status == 'pending' and order.order_status == 'pending')
+        is_pharmacy_view = False
     else:
         # Para farmacias, verificar que la orden pertenece a sus productos
         from users.models import PharmacyProfile
         pharmacy = get_object_or_404(PharmacyProfile, user=request.user)
         order = get_object_or_404(Order, id=order_id, pharmacy=pharmacy)
-
-    # Verificar si se puede dejar reseña (solo para clientes)
-    can_review = (request.user.user_type == 'client' and
-                  order.order_status == 'delivered' and
-                  not hasattr(order, 'review'))
+        # Para farmacias: mostrar opciones de gestión de entrega
+        can_review = False
+        can_pay = False
+        is_pharmacy_view = True
 
     context = {
         'order': order,
         'can_review': can_review,
+        'can_pay': can_pay,
+        'is_pharmacy_view': is_pharmacy_view,
     }
     return render(request, 'orders/order_detail.html', context)
 
@@ -190,3 +195,58 @@ def delivery_status(request, order_id):
         'order': order,
         'delivery': delivery,
     })
+
+
+@login_required
+def update_order_status(request, order_id):
+    """Vista para que farmacias actualicen el estado de las órdenes"""
+    if request.user.user_type != 'pharmacy':
+        messages.error(request, 'Solo las farmacias pueden gestionar órdenes.')
+        return redirect('users:profile')
+
+    from users.models import PharmacyProfile
+    pharmacy = get_object_or_404(PharmacyProfile, user=request.user)
+    order = get_object_or_404(Order, id=order_id, pharmacy=pharmacy)
+
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        if new_status in ['confirmed', 'preparing', 'ready_for_delivery']:
+            order.order_status = new_status
+            order.save()
+            messages.success(request, f'Estado de la orden actualizado a: {order.get_order_status_display()}')
+        else:
+            messages.error(request, 'Estado no válido.')
+
+    return redirect('orders:order_detail', order_id=order.id)
+
+
+@login_required
+def start_delivery(request, order_id):
+    """Vista para iniciar el proceso de entrega"""
+    if request.user.user_type != 'pharmacy':
+        messages.error(request, 'Solo las farmacias pueden gestionar entregas.')
+        return redirect('users:profile')
+
+    from users.models import PharmacyProfile
+    pharmacy = get_object_or_404(PharmacyProfile, user=request.user)
+    order = get_object_or_404(Order, id=order_id, pharmacy=pharmacy)
+
+    if request.method == 'POST' and order.order_status == 'ready_for_delivery':
+        delivery_type = request.POST.get('delivery_type')
+        external_service = request.POST.get('external_service')
+
+        # Crear registro de entrega
+        delivery = Delivery.objects.create(
+            order=order,
+            delivery_type=delivery_type,
+            external_service=external_service if delivery_type == 'external' else None,
+            status='assigned'
+        )
+
+        # Actualizar estado de la orden
+        order.order_status = 'in_delivery'
+        order.save()
+
+        messages.success(request, f'Entrega iniciada vía {delivery.get_delivery_type_display()}')
+
+    return redirect('orders:order_detail', order_id=order.id)

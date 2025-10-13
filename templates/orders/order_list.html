@@ -35,7 +35,7 @@
                                         <p class="mb-1"><strong>Entrega:</strong> {{ order.get_delivery_type_display }}</p>
                                     </div>
                                     <div class="col-md-4 text-end">
-                                        <p class="h5 text-primary mb-1">{{ order.total }} Bs</p>
+                                        <p class="h5 text-primary mb-1">{{ order.total }} USD</p>
                                         <p class="small text-muted mb-2">{{ order.get_payment_status_display }}</p>
                                         <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-outline-primary btn-sm">
                                             <i class="fas fa-eye"></i> Ver Detalles

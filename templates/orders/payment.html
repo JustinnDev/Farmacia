@@ -10,12 +10,21 @@
                 <h3 class="card-title mb-0"><i class="fas fa-credit-card"></i> Procesar Pago</h3>
             </div>
             <div class="card-body">
+                <!-- Información importante sobre conversión -->
+                <div class="alert alert-info mb-4">
+                    <h6><i class="fas fa-info-circle"></i> Información de Pago</h6>
+                    <p class="mb-1"><strong>Moneda de la plataforma:</strong> USD (Dólares Americanos)</p>
+                    <p class="mb-1"><strong>Para pagos en Venezuela:</strong> Use la tasa BCV del día para convertir USD a VES</p>
+                    <p class="mb-0"><strong>Responsabilidad del pago:</strong> El cliente debe calcular y realizar el pago equivalente en bolívares usando la tasa oficial del BCV</p>
+                </div>
+
                 <!-- Resumen de la orden -->
                 <div class="alert alert-info mb-4">
                     <h5>Orden #{{ order.order_number }}</h5>
-                    <p class="mb-1"><strong>Total a Pagar:</strong> {{ order.total }} Bs</p>
+                    <p class="mb-1"><strong>Total a Pagar:</strong> {{ order.total }} USD</p>
                     <p class="mb-1"><strong>Fecha Límite de Pago:</strong> {{ order.payment_deadline|date:"d/m/Y H:i" }}</p>
                     <p class="mb-0"><strong>Farmacia:</strong> {{ order.pharmacy.pharmacy_name }}</p>
+                    <small class="text-muted">* El cliente debe convertir este monto a VES usando la tasa BCV actual</small>
                 </div>
 
                 <form method="post">
@@ -34,7 +43,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="alert alert-warning">
-                                    <strong>Importante:</strong> Realiza la transferencia a través de Pago Móvil usando los datos proporcionados por la farmacia.
+                                    <strong>Importante:</strong> Convierte el monto de USD a VES usando la tasa BCV del día y realiza la transferencia a través de Pago Móvil.
                                 </div>
 
                                 <div class="mb-3">
@@ -52,9 +61,10 @@
                                 <div class="alert alert-info">
                                     <h6><i class="fas fa-info-circle"></i> Instrucciones para Pago Móvil:</h6>
                                     <ol class="mb-0">
+                                        <li>Convierte {{ order.total }} USD a VES usando la tasa BCV del día</li>
                                         <li>Abre la app de tu banco</li>
                                         <li>Selecciona "Pago Móvil" o "Transferencia"</li>
-                                        <li>Ingresa el número de teléfono y monto</li>
+                                        <li>Ingresa el número de teléfono y el monto convertido en VES</li>
                                         <li>Confirma la transacción</li>
                                         <li>Guarda el comprobante de pago</li>
                                     </ol>
