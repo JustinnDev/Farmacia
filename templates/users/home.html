@@ -5,41 +5,76 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <div class="jumbotron bg-primary text-white rounded p-5 mb-4">
-            <h1 class="display-4">Bienvenido a FarmaYa</h1>
-            <p class="lead">Tu farmacia online de confianza. Encuentra medicamentos y productos de salud con la mejor calidad y precio.</p>
-            <a href="{% url 'products:product_list' %}" class="btn btn-light btn-lg">
-                <i class="fas fa-store"></i> Explorar Productos
-            </a>
+        <div class="hero-section text-center py-5 mb-5">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-6 text-start">
+                        <h1 class="display-4 fw-bold mb-4" style="color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                            <i class="fas fa-pills me-3" style="color: #4ECDC4;"></i>
+                            Bienvenido a FarmaYa
+                        </h1>
+                        <p class="lead mb-4" style="color: rgba(255,255,255,0.9); font-size: 1.25rem;">
+                            Tu farmacia online de confianza. Encuentra medicamentos y productos de salud con la mejor calidad y precio.
+                        </p>
+                        <div class="d-flex gap-3 flex-wrap">
+                            <a href="{% url 'products:product_list' %}" class="btn btn-light btn-lg px-4 py-3 shadow-lg">
+                                <i class="fas fa-store me-2"></i> Explorar Productos
+                            </a>
+                            <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg px-4 py-3">
+                                <i class="fas fa-user-plus me-2"></i> Registrarse
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="hero-illustration text-center">
+                            <div class="floating-card" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); border-radius: 24px; padding: 3rem; border: 1px solid rgba(255,255,255,0.2);">
+                                <i class="fas fa-heartbeat fa-5x mb-3" style="color: #FF6B6B;"></i>
+                                <h3 style="color: white;">Salud y Bienestar</h3>
+                                <p style="color: rgba(255,255,255,0.8);">Tu bienestar es nuestra prioridad</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-search fa-3x text-primary mb-3"></i>
-                <h5 class="card-title">Búsqueda Inteligente</h5>
-                <p class="card-text">Encuentra productos por nombre, marca o categoría con nuestro sistema de búsqueda avanzado.</p>
+<div class="features-section py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card text-center p-4 h-100">
+                    <div class="feature-icon mb-4">
+                        <i class="fas fa-search fa-4x" style="color: #00C4CC;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold mb-3" style="color: var(--canva-dark);">Búsqueda Inteligente</h5>
+                    <p class="card-text" style="color: var(--canva-gray-600);">
+                        Encuentra productos por nombre, marca o categoría con nuestro sistema de búsqueda avanzado.
+                    </p>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-truck fa-3x text-success mb-3"></i>
-                <h5 class="card-title">Entrega Rápida</h5>
-                <p class="card-text">Recibe tus medicamentos en la puerta de tu casa con nuestros servicios de entrega.</p>
+            <div class="col-md-4">
+                <div class="feature-card text-center p-4 h-100">
+                    <div class="feature-icon mb-4">
+                        <i class="fas fa-truck fa-4x" style="color: #FF6B6B;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold mb-3" style="color: var(--canva-dark);">Entrega Rápida</h5>
+                    <p class="card-text" style="color: var(--canva-gray-600);">
+                        Recibe tus medicamentos en la puerta de tu casa con nuestros servicios de entrega.
+                    </p>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-shield-alt fa-3x text-warning mb-3"></i>
-                <h5 class="card-title">Farmacias Verificadas</h5>
-                <p class="card-text">Todas nuestras farmacias están verificadas y cumplen con los estándares de calidad.</p>
+            <div class="col-md-4">
+                <div class="feature-card text-center p-4 h-100">
+                    <div class="feature-icon mb-4">
+                        <i class="fas fa-shield-alt fa-4x" style="color: #4ECDC4;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold mb-3" style="color: var(--canva-dark);">Farmacias Verificadas</h5>
+                    <p class="card-text" style="color: var(--canva-gray-600);">
+                        Todas nuestras farmacias están verificadas y cumplen con los estándares de calidad.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -91,9 +126,38 @@
         <div class="alert alert-info">
             <h5><i class="fas fa-user"></i> ¡Hola, {{ user.username }}!</h5>
             {% if user.user_type == 'pharmacy' %}
-                <p>Accede a tu <a href="{% url 'users:profile' %}">perfil de farmacia</a> para gestionar tus productos y pedidos.</p>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <a href="{% url 'products:product_create' %}" class="btn btn-success w-100 mb-2">
+                            <i class="fas fa-plus"></i> Agregar Producto
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{% url 'products:pharmacy_products' %}" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-list"></i> Mis Productos
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{% url 'orders:order_list' %}" class="btn btn-warning w-100 mb-2">
+                            <i class="fas fa-truck"></i> Gestionar Órdenes
+                        </a>
+                    </div>
+                </div>
+                <p class="mt-2 mb-0">Gestiona tu farmacia desde tu <a href="{% url 'users:profile' %}">perfil</a>.</p>
             {% else %}
-                <p>Explora nuestros productos o revisa tus <a href="{% url 'orders:order_list' %}">órdenes anteriores</a>.</p>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <a href="{% url 'products:product_list' %}" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-store"></i> Explorar Productos
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'orders:cart_detail' %}" class="btn btn-success w-100 mb-2">
+                            <i class="fas fa-shopping-cart"></i> Mi Carrito
+                        </a>
+                    </div>
+                </div>
+                <p class="mt-2 mb-0">Revisa tus <a href="{% url 'orders:order_list' %}">órdenes anteriores</a> o continúa comprando.</p>
             {% endif %}
         </div>
     </div>

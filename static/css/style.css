@@ -1,32 +1,395 @@
-/* Estilos personalizados para FarmaYa */
+/* FarmaYa - Canva-inspired Design System */
 
-/* Navbar */
+/* Color Palette - Canva Inspired */
+:root {
+    --canva-primary: #00C4CC;
+    --canva-secondary: #FF6B6B;
+    --canva-accent: #4ECDC4;
+    --canva-dark: #2C3E50;
+    --canva-light: #F8F9FA;
+    --canva-gray-50: #F8F9FA;
+    --canva-gray-100: #E9ECEF;
+    --canva-gray-200: #DEE2E6;
+    --canva-gray-300: #CED4DA;
+    --canva-gray-400: #ADB5BD;
+    --canva-gray-500: #6C757D;
+    --canva-gray-600: #495057;
+    --canva-gray-700: #343A40;
+    --canva-gray-800: #212529;
+    --canva-gray-900: #000000;
+    --canva-success: #51CF66;
+    --canva-warning: #FFD43B;
+    --canva-danger: #FF6B6B;
+    --canva-info: #74C0FC;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #00C4CC 0%, #4ECDC4 100%);
+    --gradient-secondary: linear-gradient(135deg, #FF6B6B 0%, #FFA726 100%);
+    --gradient-accent: linear-gradient(135deg, #4ECDC4 0%, #00C4CC 100%);
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.2);
+    --shadow-xl: 0 16px 64px rgba(0, 0, 0, 0.25);
+
+    /* Border Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 50px;
+
+    /* Typography */
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Global Styles */
+body {
+    font-family: var(--font-primary);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: var(--canva-gray-800);
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    color: var(--canva-dark);
+}
+
+/* Navigation */
+.navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: var(--shadow-sm);
+    padding: 1rem 0;
+}
+
 .navbar-brand {
-    font-weight: bold;
+    font-weight: 700;
     font-size: 1.5rem;
+    color: var(--canva-primary) !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.navbar-brand i {
+    font-size: 1.8rem;
+}
+
+.navbar-nav .nav-link {
+    font-weight: 500;
+    color: var(--canva-gray-700) !important;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.navbar-nav .nav-link:hover {
+    color: var(--canva-primary) !important;
+    background: rgba(0, 196, 204, 0.1);
+    transform: translateY(-1px);
+}
+
+.navbar-nav .nav-link.active {
+    color: var(--canva-primary) !important;
+    background: rgba(0, 196, 204, 0.1);
+}
+
+/* Buttons */
+.btn {
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    color: white;
+}
+
+.btn-success {
+    background: var(--gradient-secondary);
+    color: white;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    color: white;
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--canva-primary);
+    color: var(--canva-primary);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--canva-primary);
+    color: white;
+    transform: translateY(-2px);
 }
 
 /* Cards */
 .card {
     border: none;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease-in-out;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    transition: all 0.3s ease;
+    overflow: hidden;
 }
 
 .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
 }
 
-/* Botones */
-.btn {
-    border-radius: 8px;
+.card-header {
+    background: linear-gradient(135deg, rgba(0, 196, 204, 0.1) 0%, rgba(78, 205, 196, 0.1) 100%);
+    border-bottom: 1px solid rgba(0, 196, 204, 0.1);
+    padding: 1.5rem;
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+/* Forms */
+.form-control, .form-select {
+    border: 2px solid var(--canva-gray-200);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--canva-primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 196, 204, 0.25);
+    background: white;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--canva-gray-700);
+    margin-bottom: 0.5rem;
+}
+
+/* Alerts */
+.alert {
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 1rem 1.5rem;
     font-weight: 500;
-    transition: all 0.2s ease-in-out;
 }
 
-.btn:hover {
-    transform: translateY(-1px);
+.alert-info {
+    background: linear-gradient(135deg, rgba(116, 192, 252, 0.1) 0%, rgba(116, 192, 252, 0.05) 100%);
+    color: var(--canva-gray-700);
+}
+
+.alert-success {
+    background: linear-gradient(135deg, rgba(81, 207, 102, 0.1) 0%, rgba(81, 207, 102, 0.05) 100%);
+    color: var(--canva-gray-700);
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, rgba(255, 212, 59, 0.1) 0%, rgba(255, 212, 59, 0.05) 100%);
+    color: var(--canva-gray-700);
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 107, 107, 0.05) 100%);
+    color: var(--canva-gray-700);
+}
+
+/* Badges */
+.badge {
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+}
+
+/* Progress Bars */
+.progress {
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--canva-gray-200);
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: var(--gradient-primary);
+    transition: width 0.3s ease;
+}
+
+/* Images */
+.card-img-top {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    object-fit: cover;
+}
+
+/* Product Cards */
+.product-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+}
+
+.product-card .card-body {
+    padding: 1.5rem;
+}
+
+/* Hero Section */
+.jumbotron {
+    background: linear-gradient(135deg, rgba(0, 196, 204, 0.9) 0%, rgba(78, 205, 196, 0.9) 100%);
+    border-radius: var(--radius-xl);
+    padding: 4rem 2rem;
+    margin-bottom: 3rem;
+    color: white;
+    text-align: center;
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow-xl);
+}
+
+.jumbotron h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.jumbotron .lead {
+    font-size: 1.25rem;
+    font-weight: 400;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+/* Footer */
+footer {
+    background: rgba(44, 62, 80, 0.95);
+    backdrop-filter: blur(20px);
+    color: white;
+    padding: 3rem 0 1rem;
+    margin-top: 4rem;
+}
+
+footer h5 {
+    color: var(--canva-primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+footer a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+footer a:hover {
+    color: var(--canva-primary);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .jumbotron {
+        padding: 2rem 1rem;
+    }
+
+    .jumbotron h1 {
+        font-size: 2rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.25rem;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+}
+
+/* Loading states */
+.btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn.loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 /* Formularios */
@@ -325,21 +688,79 @@ footer {
     border-radius: 8px;
 }
 
+/* Hero Section Styles */
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.08)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.floating-card {
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+/* Features Section */
+.features-section {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+}
+
+.feature-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    transition: all 0.4s ease;
+    border: 1px solid rgba(0, 196, 204, 0.1);
+}
+
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--canva-primary);
+}
+
+.feature-icon {
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover .feature-icon {
+    transform: scale(1.1);
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
+    background: var(--canva-gray-100);
+    border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 4px;
+    background: var(--canva-primary);
+    border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
+    background: var(--canva-accent);
 }

@@ -297,6 +297,44 @@
                 <small class="text-muted">Horario de atención: Lunes a Viernes, 8:00 AM - 6:00 PM</small>
             </div>
         </div>
+
+        <!-- Acciones rápidas -->
+        {% if user.is_authenticated %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Acciones Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    {% if user.user_type == 'client' %}
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-store"></i> Explorar Productos
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="{% url 'orders:cart_detail' %}" class="btn btn-outline-success w-100">
+                                    <i class="fas fa-shopping-cart"></i> Mi Carrito
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <a href="{% url 'products:product_create' %}" class="btn btn-outline-success w-100">
+                                    <i class="fas fa-plus"></i> Agregar Producto
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="{% url 'products:pharmacy_products' %}" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-list"></i> Gestionar Productos
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
     </div>
 </div>
 

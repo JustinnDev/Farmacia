@@ -51,7 +51,7 @@
     </div>
 
     <div class="col-md-9">
-        <!-- Header con título y ordenamiento -->
+        <!-- Header con título, ordenamiento y acciones -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>
                 {% if category %}
@@ -63,16 +63,38 @@
                 {% endif %}
             </h2>
 
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    Ordenar por
-                </button>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=name">Nombre</a></li>
-                    <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=price_low">Precio: Menor a Mayor</a></li>
-                    <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=price_high">Precio: Mayor a Menor</a></li>
-                    <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=rating">Calificación</a></li>
-                </ul>
+            <div class="d-flex gap-2">
+                {% if user.is_authenticated %}
+                    {% if user.user_type == 'pharmacy' %}
+                        <div class="btn-group">
+                            <a href="{% url 'products:product_create' %}" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Agregar Producto
+                            </a>
+                            <a href="{% url 'products:pharmacy_products' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-list"></i> Mis Productos
+                            </a>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'orders:cart_detail' %}" class="btn btn-success">
+                            <i class="fas fa-shopping-cart"></i> Ver Carrito
+                            {% if request.session.cart %}
+                                <span class="badge bg-danger ms-1">{{ request.session.cart|length }}</span>
+                            {% endif %}
+                        </a>
+                    {% endif %}
+                {% endif %}
+
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Ordenar por
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=name">Nombre</a></li>
+                        <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=price_low">Precio: Menor a Mayor</a></li>
+                        <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=price_high">Precio: Mayor a Menor</a></li>
+                        <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=rating">Calificación</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
 
