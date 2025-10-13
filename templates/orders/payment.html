@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Pago de Orden - FarmaYa{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0"><i class="fas fa-credit-card"></i> Procesar Pago</h3>
+            </div>
+            <div class="card-body">
+                <!-- Resumen de la orden -->
+                <div class="alert alert-info mb-4">
+                    <h5>Orden #{{ order.order_number }}</h5>
+                    <p class="mb-1"><strong>Total a Pagar:</strong> {{ order.total }} Bs</p>
+                    <p class="mb-1"><strong>Fecha Límite de Pago:</strong> {{ order.payment_deadline|date:"d/m/Y H:i" }}</p>
+                    <p class="mb-0"><strong>Farmacia:</strong> {{ order.pharmacy.pharmacy_name }}</p>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="form-label">Selecciona Método de Pago</label>
+                        {{ form.payment_method }}
+                    </div>
+
+                    <!-- Campos específicos para C2P -->
+                    <div id="c2p-fields" style="display: none;">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0"><i class="fas fa-mobile-alt"></i> Información de Pago Móvil C2P</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning">
+                                    <strong>Importante:</strong> Realiza la transferencia a través de Pago Móvil usando los datos proporcionados por la farmacia.
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.c2p_phone.id_for_label }}" class="form-label">Número de Teléfono C2P</label>
+                                    {{ form.c2p_phone }}
+                                    <div class="form-text">Número de teléfono registrado para Pago Móvil</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.c2p_reference.id_for_label }}" class="form-label">Referencia C2P</label>
+                                    {{ form.c2p_reference }}
+                                    <div class="form-text">Código de referencia de la transacción</div>
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-info-circle"></i> Instrucciones para Pago Móvil:</h6>
+                                    <ol class="mb-0">
+                                        <li>Abre la app de tu banco</li>
+                                        <li>Selecciona "Pago Móvil" o "Transferencia"</li>
+                                        <li>Ingresa el número de teléfono y monto</li>
+                                        <li>Confirma la transacción</li>
+                                        <li>Guarda el comprobante de pago</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información para otros métodos de pago -->
+                    <div id="other-payment-fields" style="display: none;">
+                        <div class="alert alert-secondary">
+                            <h6><i class="fas fa-clock"></i> Próximamente</h6>
+                            <p class="mb-0">PayPal y Stripe estarán disponibles próximamente. Por ahora, solo aceptamos Pago Móvil C2P.</p>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-paper-plane"></i> Procesar Pago
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Información adicional -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Información Importante</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-clock"></i> Tiempo Límite</h6>
+                        <p>Tienes hasta {{ order.payment_deadline|date:"d/m/Y H:i" }} para completar el pago.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-shield-alt"></i> Seguridad</h6>
+                        <p>Tus datos de pago están protegidos y no se almacenan en nuestros servidores.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Mostrar/ocultar campos según el método de pago seleccionado
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethodInputs = document.querySelectorAll('input[name="payment_method"]');
+    const c2pFields = document.getElementById('c2p-fields');
+    const otherFields = document.getElementById('other-payment-fields');
+
+    function togglePaymentFields() {
+        const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
+        if (selectedMethod) {
+            if (selectedMethod.value === 'c2p') {
+                c2pFields.style.display = 'block';
+                otherFields.style.display = 'none';
+            } else {
+                c2pFields.style.display = 'none';
+                otherFields.style.display = 'block';
+            }
+        }
+    }
+
+    paymentMethodInputs.forEach(input => {
+        input.addEventListener('change', togglePaymentFields);
+    });
+
+    // Inicializar
+    togglePaymentFields();
+});
+</script>
+{% endblock %}

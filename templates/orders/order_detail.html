@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}Orden {{ order.order_number }} - FarmaYa{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-receipt"></i> Orden {{ order.order_number }}</h2>
+            <span class="badge fs-6
+                {% if order.order_status == 'pending' %}bg-warning
+                {% elif order.order_status == 'paid' %}bg-info
+                {% elif order.order_status == 'confirmed' %}bg-primary
+                {% elif order.order_status == 'preparing' %}bg-secondary
+                {% elif order.order_status == 'ready_for_delivery' %}bg-success
+                {% elif order.order_status == 'in_delivery' %}bg-info
+                {% elif order.order_status == 'delivered' %}bg-success
+                {% else %}bg-danger{% endif %}">
+                {{ order.get_order_status_display }}
+            </span>
+        </div>
+
+        <!-- Detalles de la orden -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Detalles de la Orden</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Fecha de Orden:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+                        <p><strong>Farmacia:</strong>
+                            <a href="{% url 'users:pharmacy_detail' order.pharmacy.id %}">
+                                {{ order.pharmacy.pharmacy_name }}
+                            </a>
+                        </p>
+                        <p><strong>Estado del Pago:</strong>
+                            <span class="badge
+                                {% if order.payment_status == 'pending' %}bg-warning
+                                {% elif order.payment_status == 'processing' %}bg-info
+                                {% elif order.payment_status == 'completed' %}bg-success
+                                {% else %}bg-danger{% endif %}">
+                                {{ order.get_payment_status_display }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Tipo de Entrega:</strong> {{ order.get_delivery_type_display }}</p>
+                        {% if order.delivery_address %}
+                            <p><strong>Dirección:</strong> {{ order.delivery_address }}</p>
+                        {% endif %}
+                        {% if order.delivery_instructions %}
+                            <p><strong>Instrucciones:</strong> {{ order.delivery_instructions }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Productos</h5>
+            </div>
+            <div class="card-body">
+                {% for item in order.items.all %}
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-md-2">
+                            {% if item.product.main_image %}
+                                <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}"
+                                     class="img-fluid rounded" style="max-height: 60px;">
+                            {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                                     style="height: 60px; width: 60px;">
+                                    <i class="fas fa-pills text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="mb-1">
+                                <a href="{% url 'products:product_detail' item.product.id %}" class="text-decoration-none">
+                                    {{ item.product.name }}
+                                </a>
+                            </h6>
+                            {% if item.variant %}
+                                <small class="text-muted">{{ item.variant.name }}</small>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-2">
+                            <span>Cant: {{ item.quantity }}</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span>{{ item.unit_price }} Bs</span>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <span class="fw-bold">{{ item.total_price }} Bs</span>
+                        </div>
+                    </div>
+                    {% if not forloop.last %}
+                        <hr>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Información de entrega si existe -->
+        {% if order.delivery %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Estado de Entrega</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Estado:</strong>
+                                <span class="badge
+                                    {% if order.delivery.status == 'pending' %}bg-warning
+                                    {% elif order.delivery.status == 'assigned' %}bg-info
+                                    {% elif order.delivery.status == 'picked_up' %}bg-primary
+                                    {% elif order.delivery.status == 'in_transit' %}bg-info
+                                    {% elif order.delivery.status == 'delivered' %}bg-success
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ order.delivery.get_status_display }}
+                                </span>
+                            </p>
+                            {% if order.delivery.external_service %}
+                                <p><strong>Servicio:</strong> {{ order.delivery.get_external_service_display }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if order.delivery.delivery_person_name %}
+                                <p><strong>Repartidor:</strong> {{ order.delivery.delivery_person_name }}</p>
+                            {% endif %}
+                            {% if order.delivery.delivery_person_phone %}
+                                <p><strong>Teléfono:</strong> {{ order.delivery.delivery_person_phone }}</p>
+                            {% endif %}
+                            {% if order.delivery.tracking_number %}
+                                <p><strong>Número de Seguimiento:</strong> {{ order.delivery.tracking_number }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Reseña si la orden está entregada -->
+        {% if can_review %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Deja tu Reseña</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'orders:review' order.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Calificación</label>
+                            <div class="rating-stars">
+                                {% for i in "12345"|make_list %}
+                                    <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}" required>
+                                    <label for="star{{ i }}"><i class="fas fa-star"></i></label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Comentario (Opcional)</label>
+                            <textarea class="form-control" id="comment" name="comment" rows="3" placeholder="Comparte tu experiencia..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-star"></i> Enviar Reseña
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <!-- Resumen -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Resumen</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal:</span>
+                    <span>{{ order.subtotal }} Bs</span>
+                </div>
+                {% if order.tax %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Impuestos:</span>
+                        <span>{{ order.tax }} Bs</span>
+                    </div>
+                {% endif %}
+                {% if order.delivery_fee %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Envío:</span>
+                        <span>{{ order.delivery_fee }} Bs</span>
+                    </div>
+                {% endif %}
+                <hr>
+                <div class="d-flex justify-content-between mb-3">
+                    <strong>Total:</strong>
+                    <strong>{{ order.total }} Bs</strong>
+                </div>
+
+                {% if order.payment_status == 'pending' and order.order_status == 'pending' %}
+                    <a href="{% url 'orders:payment' order.id %}" class="btn btn-success w-100">
+                        <i class="fas fa-credit-card"></i> Pagar Ahora
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Información de contacto -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">¿Necesitas Ayuda?</h5>
+            </div>
+            <div class="card-body">
+                <p><i class="fas fa-envelope"></i> soporte@farmaya.com</p>
+                <p><i class="fas fa-phone"></i> +58 212 123 4567</p>
+                <small class="text-muted">Horario de atención: Lunes a Viernes, 8:00 AM - 6:00 PM</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.rating-stars {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.rating-stars input {
+    display: none;
+}
+
+.rating-stars label {
+    color: #ddd;
+    font-size: 24px;
+    cursor: pointer;
+    margin: 0 2px;
+}
+
+.rating-stars input:checked ~ label,
+.rating-stars label:hover,
+.rating-stars label:hover ~ label {
+    color: #ffc107;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Carrito de Compras - FarmaYa{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h2 class="mb-4"><i class="fas fa-shopping-cart"></i> Carrito de Compras</h2>
+
+        {% if cart %}
+            <div class="card">
+                <div class="card-body">
+                    {% for item in cart %}
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-md-2">
+                                {% if item.product.main_image %}
+                                    <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}"
+                                         class="img-fluid rounded" style="max-height: 60px;">
+                                {% else %}
+                                    <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                                         style="height: 60px; width: 60px;">
+                                        <i class="fas fa-pills text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="mb-1">
+                                    <a href="{% url 'products:product_detail' item.product.id %}" class="text-decoration-none">
+                                        {{ item.product.name }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">{{ item.product.pharmacy.pharmacy_name }}</small>
+                            </div>
+                            <div class="col-md-2">
+                                <span class="fw-bold">{{ item.price }} Bs</span>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">Cant.</span>
+                                    <input type="number" class="form-control" value="{{ item.quantity }}" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <span class="fw-bold">{{ item.total_price }} Bs</span>
+                                <br>
+                                <a href="{% url 'orders:cart_remove' item.product.id %}" class="btn btn-sm btn-outline-danger mt-1">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% if not forloop.last %}
+                            <hr>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+                    <h4>Tu carrito está vacío</h4>
+                    <p class="text-muted">Agrega algunos productos para comenzar tu compra.</p>
+                    <a href="{% url 'products:product_list' %}" class="btn btn-primary">
+                        <i class="fas fa-store"></i> Explorar Productos
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if cart %}
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Resumen de Compra</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>{{ cart.get_total_price }} Bs</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Envío:</span>
+                        <span>Por calcular</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Total:</strong>
+                        <strong>{{ cart.get_total_price }} Bs</strong>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'orders:checkout' %}" class="btn btn-success">
+                            <i class="fas fa-credit-card"></i> Proceder al Pago
+                        </a>
+                        <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-plus"></i> Agregar Más Productos
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información importante -->
+            <div class="alert alert-info mt-3">
+                <h6><i class="fas fa-info-circle"></i> Información Importante</h6>
+                <ul class="mb-0 small">
+                    <li>Todos los productos deben ser de la misma farmacia</li>
+                    <li>El pago se procesa después de confirmar la orden</li>
+                    <li>Tienes 24 horas para completar el pago</li>
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

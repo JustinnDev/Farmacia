@@ -1,0 +1,27 @@
+¿que es FarmaYa?
+Es una plataforma que conecta farmacias con clientes, su principal proposito es crear marketplace de medicinas y productos donde los clientes busquen la opcion que mas les convenga, ya sea calidad-precio, precio-distancia o calidad-confianza.
+
+
+
+¿Tipo de perfil?
+Habran dos perfiles de usuario, famracia y cliente, el perfil de farmacia tendra una landing page integrada en su perfil donde se mostrara todos sus datos, ubicacion, catalogo, reputacion, verificacion etc.
+el perfil de cliente tendra su perfil de usuario normal donde se mostrara datos relevantes y tambien su verificacion. 
+
+
+
+¿Como se integrara las compra-ventas?
+Parecido a mercadolibre, las farmacias tendran su catalogo publicado y los clientes buscaran un producto en especifico, luego el cliente abrira una compra del mismo, tendra un plazo para pagar con diferentes metodos. luego al finalizar el pago, el proceso de entraga se abrira para la farmacia y esta misma tendra que despacharlo con diferentes metodos.
+
+
+
+Metodos de pago y economia (la plataforma se manejara $$$ BCV)
+El principal meotodo de pago que se tendria que priorizar seria el pago movil C2P, ya que seguro es el que mas se necesite, igualmente se podria ofrecer en el futuro otros metodos como Paypal, Stripe etc.
+
+
+
+Metodos de desapacho
+Delivery interno: la farmacia ya tiene sus deliverys y te envian el producto a tu ubicacion
+Delivery externo: la famracia usa un delivery externo mediante la plataforma como Ridey, Yummi o django y te envia el producto a tu ubiacion
+cliente-Farmacia: el cliente ira hacia la farmacia y buscara el producto ya pagado. 
+
+

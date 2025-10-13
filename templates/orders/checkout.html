@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - FarmaYa{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h2 class="mb-4"><i class="fas fa-credit-card"></i> Finalizar Compra</h2>
+
+        <!-- Resumen de productos -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Productos en tu Orden</h5>
+            </div>
+            <div class="card-body">
+                {% for item in cart %}
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-md-2">
+                            {% if item.product.main_image %}
+                                <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}"
+                                     class="img-fluid rounded" style="max-height: 60px;">
+                            {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                                     style="height: 60px; width: 60px;">
+                                    <i class="fas fa-pills text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="mb-1">{{ item.product.name }}</h6>
+                            <small class="text-muted">{{ item.product.pharmacy.pharmacy_name }}</small>
+                        </div>
+                        <div class="col-md-3">
+                            <span>Cantidad: {{ item.quantity }}</span>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <span class="fw-bold">{{ item.total_price }} Bs</span>
+                        </div>
+                    </div>
+                    {% if not forloop.last %}
+                        <hr>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Información de entrega -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Información de Entrega</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Entrega</label>
+                        {{ form.delivery_type }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.delivery_address.id_for_label }}" class="form-label">Dirección de Entrega</label>
+                        {{ form.delivery_address }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.delivery_instructions.id_for_label }}" class="form-label">Instrucciones de Entrega (Opcional)</label>
+                        {{ form.delivery_instructions }}
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Información de Entrega</h6>
+                        <ul class="mb-0 small">
+                            <li><strong>Entrega Interna:</strong> La farmacia se encarga del envío</li>
+                            <li><strong>Entrega Externa:</strong> Servicio de delivery externo (Riddy, Yummy, etc.)</li>
+                            <li><strong>Recoger en Farmacia:</strong> Retira los productos directamente en la farmacia</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-check"></i> Confirmar Orden
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Resumen de compra -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Resumen de Compra</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal:</span>
+                    <span>{{ cart.get_total_price }} Bs</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Envío:</span>
+                    <span>Por calcular</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-3">
+                    <strong>Total:</strong>
+                    <strong>{{ cart.get_total_price }} Bs</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información de la farmacia -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Farmacia</h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ cart.get_pharmacy.pharmacy_name }}</h6>
+                {% if cart.get_pharmacy.is_verified %}
+                    <p class="mb-1">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <small class="text-success">Farmacia Verificada</small>
+                    </p>
+                {% endif %}
+
+                {% if cart.get_pharmacy.rating %}
+                    <div class="mb-2">
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= cart.get_pharmacy.rating %}
+                                <i class="fas fa-star text-warning"></i>
+                            {% else %}
+                                <i class="far fa-star text-warning"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <small class="ms-1">{{ cart.get_pharmacy.rating|floatformat:1 }}</small>
+                    </div>
+                {% endif %}
+
+                <p class="mb-1"><i class="fas fa-map-marker-alt"></i> {{ cart.get_pharmacy.city }}, {{ cart.get_pharmacy.state }}</p>
+
+                {% if cart.get_pharmacy.opening_time and cart.get_pharmacy.closing_time %}
+                    <p class="mb-0"><i class="fas fa-clock"></i> {{ cart.get_pharmacy.opening_time|time:"H:i" }} - {{ cart.get_pharmacy.closing_time|time:"H:i" }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

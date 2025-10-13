@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} - FarmaYa{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <!-- Imagen del producto -->
+        <div class="card">
+            {% if product.main_image %}
+                <img src="{{ product.main_image.url }}" class="card-img-top" alt="{{ product.name }}">
+            {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                     style="height: 400px;">
+                    <i class="fas fa-pills fa-5x text-muted"></i>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Imágenes adicionales si existen -->
+        {% if product.additional_images.exists %}
+            <div class="row mt-3">
+                {% for image in product.additional_images.all %}
+                    <div class="col-3">
+                        <img src="{{ image.image.url }}" class="img-thumbnail" alt="{{ image.alt_text }}">
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title">{{ product.name }}</h1>
+
+                <!-- Información de la farmacia -->
+                <div class="mb-3">
+                    <strong>Farmacia:</strong>
+                    <a href="{% url 'users:pharmacy_detail' product.pharmacy.id %}">
+                        {{ product.pharmacy.pharmacy_name }}
+                    </a>
+                    {% if product.pharmacy.is_verified %}
+                        <i class="fas fa-check-circle text-success ms-1" title="Farmacia Verificada"></i>
+                    {% endif %}
+                </div>
+
+                <!-- Calificación de la farmacia -->
+                {% if product.pharmacy.rating %}
+                    <div class="mb-3">
+                        <strong>Calificación:</strong>
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= product.pharmacy.rating %}
+                                <i class="fas fa-star text-warning"></i>
+                            {% else %}
+                                <i class="far fa-star text-warning"></i>
+                            {% endif %}
+                        {% endfor %}
+                        ({{ product.pharmacy.rating|floatformat:1 }})
+                    </div>
+                {% endif %}
+
+                <!-- Precio -->
+                <div class="mb-3">
+                    {% if product.is_on_sale %}
+                        <h3 class="text-danger">
+                            {{ product.discounted_price }} Bs
+                            <small class="text-decoration-line-through text-muted ms-2">
+                                {{ product.price }} Bs
+                            </small>
+                        </h3>
+                        <span class="badge bg-danger">{{ product.discount_percentage }}% OFF</span>
+                    {% else %}
+                        <h3>{{ product.price }} Bs</h3>
+                    {% endif %}
+                </div>
+
+                <!-- Información adicional -->
+                <div class="mb-3">
+                    {% if product.brand %}
+                        <p><strong>Marca:</strong> {{ product.brand }}</p>
+                    {% endif %}
+                    {% if product.sku %}
+                        <p><strong>SKU:</strong> {{ product.sku }}</p>
+                    {% endif %}
+                    <p><strong>Disponibilidad:</strong>
+                        {% if product.is_available %}
+                            <span class="text-success">Disponible</span>
+                        {% else %}
+                            <span class="text-danger">No disponible</span>
+                        {% endif %}
+                    </p>
+                    {% if product.requires_prescription %}
+                        <p><strong>Requiere Receta:</strong>
+                            <span class="text-warning">
+                                <i class="fas fa-exclamation-triangle"></i> Sí, requiere receta médica
+                            </span>
+                        </p>
+                    {% endif %}
+                </div>
+
+                <!-- Descripción -->
+                {% if product.description %}
+                    <div class="mb-3">
+                        <h5>Descripción</h5>
+                        <p>{{ product.description }}</p>
+                    </div>
+                {% endif %}
+
+                <!-- Botón de agregar al carrito -->
+                {% if user.is_authenticated and user.user_type == 'client' %}
+                    <form method="post" action="{% url 'orders:cart_add' product.id %}">
+                        {% csrf_token %}
+                        <div class="row g-2 mb-3">
+                            <div class="col-auto">
+                                <label for="quantity" class="form-label">Cantidad:</label>
+                            </div>
+                            <div class="col-auto">
+                                <input type="number" class="form-control" id="quantity" name="quantity"
+                                       value="1" min="1" max="{{ product.stock_quantity }}" style="width: 80px;">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg w-100"
+                                {% if not product.is_available or product.stock_quantity == 0 %}disabled{% endif %}>
+                            <i class="fas fa-cart-plus"></i>
+                            {% if product.is_available and product.stock_quantity > 0 %}
+                                Agregar al Carrito
+                            {% else %}
+                                Producto No Disponible
+                            {% endif %}
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        {% if not user.is_authenticated %}
+                            <a href="{% url 'users:login' %}">Inicia sesión</a> como cliente para comprar productos.
+                        {% else %}
+                            Solo los clientes pueden comprar productos.
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Productos relacionados -->
+{% if related_products %}
+<div class="row mt-5">
+    <div class="col-12">
+        <h3>Productos Relacionados</h3>
+        <div class="row">
+            {% for related_product in related_products %}
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100">
+                        {% if related_product.main_image %}
+                            <img src="{{ related_product.main_image.url }}" class="card-img-top"
+                                 alt="{{ related_product.name }}" style="height: 150px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                                 style="height: 150px;">
+                                <i class="fas fa-pills fa-2x text-muted"></i>
+                            </div>
+                        {% endif %}
+
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <a href="{% url 'products:product_detail' related_product.id %}" class="text-decoration-none">
+                                    {{ related_product.name }}
+                                </a>
+                            </h6>
+                            <p class="card-text text-muted small">{{ related_product.pharmacy.pharmacy_name }}</p>
+                            <p class="card-text fw-bold">{{ related_product.discounted_price }} Bs</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

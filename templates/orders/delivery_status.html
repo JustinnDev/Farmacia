@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}Estado de Entrega - Orden {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-truck"></i> Estado de Entrega - Orden {{ order.order_number }}
+                </h3>
+            </div>
+            <div class="card-body">
+                <!-- Información básica -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Información de la Orden</h5>
+                        <p><strong>Farmacia:</strong> {{ order.pharmacy.pharmacy_name }}</p>
+                        <p><strong>Fecha de Orden:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+                        <p><strong>Tipo de Entrega:</strong> {{ order.get_delivery_type_display }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Estado Actual</h5>
+                        <p><strong>Estado de la Orden:</strong>
+                            <span class="badge
+                                {% if order.order_status == 'pending' %}bg-warning
+                                {% elif order.order_status == 'paid' %}bg-info
+                                {% elif order.order_status == 'confirmed' %}bg-primary
+                                {% elif order.order_status == 'preparing' %}bg-secondary
+                                {% elif order.order_status == 'ready_for_delivery' %}bg-success
+                                {% elif order.order_status == 'in_delivery' %}bg-info
+                                {% elif order.order_status == 'delivered' %}bg-success
+                                {% else %}bg-danger{% endif %}">
+                                {{ order.get_order_status_display }}
+                            </span>
+                        </p>
+                        {% if delivery %}
+                            <p><strong>Estado de Entrega:</strong>
+                                <span class="badge
+                                    {% if delivery.status == 'pending' %}bg-warning
+                                    {% elif delivery.status == 'assigned' %}bg-info
+                                    {% elif delivery.status == 'picked_up' %}bg-primary
+                                    {% elif delivery.status == 'in_transit' %}bg-info
+                                    {% elif delivery.status == 'delivered' %}bg-success
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ delivery.get_status_display }}
+                                </span>
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Timeline de entrega -->
+                <h5 class="mb-3">Seguimiento de Entrega</h5>
+                <div class="timeline">
+                    {% with steps = "pending|assigned|picked_up|in_transit|delivered"|split:"|" %}
+                        {% for step in steps %}
+                            <div class="timeline-item {% if delivery and delivery.status == step %}active{% elif delivery and forloop.counter <= "pending|assigned|picked_up|in_transit|delivered"|split:"|"|index:delivery.status %}completed{% endif %}">
+                                <div class="timeline-marker">
+                                    {% if delivery and delivery.status == step %}
+                                        <i class="fas fa-circle text-primary"></i>
+                                    {% elif delivery and forloop.counter <= "pending|assigned|picked_up|in_transit|delivered"|split:"|"|index:delivery.status %}
+                                        <i class="fas fa-check-circle text-success"></i>
+                                    {% else %}
+                                        <i class="far fa-circle text-muted"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>
+                                        {% if step == 'pending' %}Pendiente
+                                        {% elif step == 'assigned' %}Asignado
+                                        {% elif step == 'picked_up' %}Recogido
+                                        {% elif step == 'in_transit' %}En Tránsito
+                                        {% elif step == 'delivered' %}Entregado
+                                        {% endif %}
+                                    </h6>
+                                    <p class="mb-0 small text-muted">
+                                        {% if delivery %}
+                                            {% if step == 'pending' and delivery.assigned_at %}
+                                                Asignado el {{ delivery.assigned_at|date:"d/m/Y H:i" }}
+                                            {% elif step == 'picked_up' and delivery.picked_up_at %}
+                                                Recogido el {{ delivery.picked_up_at|date:"d/m/Y H:i" }}
+                                            {% elif step == 'in_transit' %}
+                                                En camino hacia tu ubicación
+                                            {% elif step == 'delivered' and delivery.delivered_at %}
+                                                Entregado el {{ delivery.delivered_at|date:"d/m/Y H:i" }}
+                                            {% else %}
+                                                Pendiente
+                                            {% endif %}
+                                        {% else %}
+                                            Información no disponible
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endwith %}
+                </div>
+
+                <!-- Información del repartidor -->
+                {% if delivery and delivery.delivery_person_name %}
+                    <div class="card mt-4 border-info">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0"><i class="fas fa-user"></i> Información del Repartidor</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Nombre:</strong> {{ delivery.delivery_person_name }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    {% if delivery.delivery_person_phone %}
+                                        <p><strong>Teléfono:</strong>
+                                            <a href="tel:{{ delivery.delivery_person_phone }}" class="text-decoration-none">
+                                                {{ delivery.delivery_person_phone }}
+                                                <i class="fas fa-phone ms-1"></i>
+                                            </a>
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if delivery.tracking_number %}
+                                <p><strong>Número de Seguimiento:</strong> {{ delivery.tracking_number }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Información adicional -->
+                <div class="alert alert-info mt-4">
+                    <h6><i class="fas fa-info-circle"></i> Información de Entrega</h6>
+                    {% if order.delivery_type == 'internal' %}
+                        <p class="mb-0">Tu pedido está siendo entregado directamente por la farmacia. El tiempo de entrega puede variar según la ubicación.</p>
+                    {% elif order.delivery_type == 'external' %}
+                        <p class="mb-0">Tu pedido está siendo entregado por un servicio externo de delivery. Recibirás actualizaciones en tiempo real.</p>
+                    {% else %}
+                        <p class="mb-0">Has seleccionado recoger tu pedido directamente en la farmacia. Te notificaremos cuando esté listo.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="text-center mt-4">
+            <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Volver a la Orden
+            </a>
+            <a href="{% url 'users:home' %}" class="btn btn-outline-primary ms-2">
+                <i class="fas fa-home"></i> Ir al Inicio
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-item.completed .timeline-marker i {
+    color: #198754 !important;
+}
+
+.timeline-item.active .timeline-marker i {
+    color: #0d6efd !important;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -22px;
+    top: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 50%;
+    border: 2px solid #e9ecef;
+}
+
+.timeline-content {
+    padding: 10px 0;
+}
+
+.timeline-content h6 {
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio - FarmaYa{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white rounded p-5 mb-4">
+            <h1 class="display-4">Bienvenido a FarmaYa</h1>
+            <p class="lead">Tu farmacia online de confianza. Encuentra medicamentos y productos de salud con la mejor calidad y precio.</p>
+            <a href="{% url 'products:product_list' %}" class="btn btn-light btn-lg">
+                <i class="fas fa-store"></i> Explorar Productos
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-search fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Búsqueda Inteligente</h5>
+                <p class="card-text">Encuentra productos por nombre, marca o categoría con nuestro sistema de búsqueda avanzado.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-truck fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Entrega Rápida</h5>
+                <p class="card-text">Recibe tus medicamentos en la puerta de tu casa con nuestros servicios de entrega.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-shield-alt fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">Farmacias Verificadas</h5>
+                <p class="card-text">Todas nuestras farmacias están verificadas y cumplen con los estándares de calidad.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">Categorías Populares</h2>
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-pills fa-2x text-primary mb-2"></i>
+                        <h6>Medicamentos</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-heart fa-2x text-danger mb-2"></i>
+                        <h6>Cuidado Personal</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-baby fa-2x text-info mb-2"></i>
+                        <h6>Bebés y Niños</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-utensils fa-2x text-success mb-2"></i>
+                        <h6>Suplementos</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h5><i class="fas fa-user"></i> ¡Hola, {{ user.username }}!</h5>
+            {% if user.user_type == 'pharmacy' %}
+                <p>Accede a tu <a href="{% url 'users:profile' %}">perfil de farmacia</a> para gestionar tus productos y pedidos.</p>
+            {% else %}
+                <p>Explora nuestros productos o revisa tus <a href="{% url 'orders:order_list' %}">órdenes anteriores</a>.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
