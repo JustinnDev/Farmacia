@@ -33,7 +33,7 @@ class Product(models.Model):
 
     # Stock and availability
     stock_quantity = models.PositiveIntegerField(default=0, verbose_name='Cantidad en Stock')
-    is_available = models.BooleanField(default=True, verbose_name='Disponible')
+    _is_available = models.BooleanField(default=True, verbose_name='Disponible')
     requires_prescription = models.BooleanField(default=False, verbose_name='Requiere Receta')
 
     # Images
@@ -52,6 +52,12 @@ class Product(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.pharmacy.pharmacy_name}"
+
+    @property
+    def is_available(self):
+        self._is_available = self.stock_quantity > 0
+        return self._is_available
+
 
     @property
     def discounted_price(self):
