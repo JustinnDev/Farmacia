@@ -57,8 +57,13 @@
                     </div>
                 </div>
 
-                {% comment %} Verificar si el producto tiene órdenes pendientes {% endcomment %}
-                {% if product.order_items.filter(order__order_status__in=['pending', 'paid', 'confirmed', 'preparing', 'ready_for_delivery', 'in_delivery']).exists %}
+                {% with has_pending_orders=False %}{% endwith %}
+                {% for item in product.order_items.all %}
+                    {% if item.order.order_status == 'pending' or item.order.order_status == 'paid' or item.order.order_status == 'confirmed' or item.order.order_status == 'preparing' or item.order.order_status == 'ready_for_delivery' or item.order.order_status == 'in_delivery' %}
+                        {% with has_pending_orders=True %}{% endwith %}
+                    {% endif %}
+                {% endfor %}
+                {% if has_pending_orders %}
                     <div class="alert alert-danger">
                         <h6><i class="fas fa-times-circle"></i> No se puede eliminar</h6>
                         <p class="mb-0">Este producto tiene órdenes pendientes o en proceso. No se puede eliminar hasta que todas las órdenes sean completadas o canceladas.</p>
