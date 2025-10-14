@@ -211,6 +211,19 @@ def update_order_status(request, order_id):
     if request.method == 'POST':
         new_status = request.POST.get('status')
         if new_status in ['confirmed', 'preparing', 'ready_for_delivery']:
+            # Si la orden se confirma (pago confirmado), descontar stock automáticamente
+            if new_status == 'confirmed' and order.order_status == 'paid':
+                # Descontar stock de cada producto en la orden
+                for item in order.items.all():
+                    product = item.product
+                    if product.stock_quantity >= item.quantity:
+                        product.stock_quantity -= item.quantity
+                        product.save()
+                        messages.info(request, f'Stock actualizado: {product.name} (-{item.quantity})')
+                    else:
+                        messages.error(request, f'Stock insuficiente para {product.name}. Stock disponible: {product.stock_quantity}')
+                        return redirect('orders:order_detail', order_id=order.id)
+
             order.order_status = new_status
             order.save()
             messages.success(request, f'Estado de la orden actualizado a: {order.get_order_status_display()}')
