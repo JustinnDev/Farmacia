@@ -207,6 +207,7 @@ def pharmacy_products(request):
     active_products = pharmacy.products.filter(is_active=True).count()
     low_stock_products = pharmacy.products.filter(stock_quantity__lte=10, is_active=True).count()
     prescription_products = pharmacy.products.filter(requires_prescription=True, is_active=True).count()
+    empty_stock_products = pharmacy.products.filter(stock_quantity__lte=0, is_active=True).count()
 
     # Paginación
     paginator = Paginator(products, 12)
@@ -219,5 +220,7 @@ def pharmacy_products(request):
         'active_products': active_products,
         'low_stock_products': low_stock_products,
         'prescription_products': prescription_products,
+        'empty_stock_products' : empty_stock_products,
     }
+
     return render(request, 'products/pharmacy_products.html', context)
