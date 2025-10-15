@@ -19,7 +19,16 @@ def pharmacy_context(request):
             return {
                 'pending_orders_count': pending_orders_count,
                 'low_stock_count': low_stock_count,
+                'is_pharmacy': True,
+                'pharmacy_name': pharmacy.pharmacy_name,
             }
         except PharmacyProfile.DoesNotExist:
             pass
+    elif request.user.is_authenticated:
+        # Contador de items en carrito para clientes
+        cart_items_count = len(request.session.get('cart', {}))
+        return {
+            'is_client': True,
+            'cart_items_count': cart_items_count,
+        }
     return {}

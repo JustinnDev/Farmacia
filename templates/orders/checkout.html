@@ -96,7 +96,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-2">
                     <span>Subtotal:</span>
-                    <span>{{ cart.get_total_price }} USD</span>
+                    <span>{{ cart_total }} USD</span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span>Envío:</span>
@@ -105,7 +105,7 @@
                 <hr>
                 <div class="d-flex justify-content-between mb-3">
                     <strong>Total:</strong>
-                    <strong>{{ cart.get_total_price }} USD</strong>
+                    <strong>{{ cart_total }} USD</strong>
                 </div>
             </div>
         </div>
@@ -116,31 +116,31 @@
                 <h5 class="mb-0">Farmacia</h5>
             </div>
             <div class="card-body">
-                <h6>{{ cart.get_pharmacy.pharmacy_name }}</h6>
-                {% if cart.get_pharmacy.is_verified %}
+                <h6>{{ pharmacy_info.pharmacy_name }}</h6>
+                {% if pharmacy_info.is_verified %}
                     <p class="mb-1">
                         <i class="fas fa-check-circle text-success"></i>
                         <small class="text-success">Farmacia Verificada</small>
                     </p>
                 {% endif %}
 
-                {% if cart.get_pharmacy.rating %}
+                {% if pharmacy_info.rating %}
                     <div class="mb-2">
                         {% for i in "12345"|make_list %}
-                            {% if forloop.counter <= cart.get_pharmacy.rating %}
+                            {% if forloop.counter <= pharmacy_info.rating %}
                                 <i class="fas fa-star text-warning"></i>
                             {% else %}
                                 <i class="far fa-star text-warning"></i>
                             {% endif %}
                         {% endfor %}
-                        <small class="ms-1">{{ cart.get_pharmacy.rating|floatformat:1 }}</small>
+                        <small class="ms-1">{{ pharmacy_info.rating|floatformat:1 }}</small>
                     </div>
                 {% endif %}
 
-                <p class="mb-1"><i class="fas fa-map-marker-alt"></i> {{ cart.get_pharmacy.city }}, {{ cart.get_pharmacy.state }}</p>
+                <p class="mb-1"><i class="fas fa-map-marker-alt"></i> {{ pharmacy_info.city }}, {{ pharmacy_info.state }}</p>
 
-                {% if cart.get_pharmacy.opening_time and cart.get_pharmacy.closing_time %}
-                    <p class="mb-0"><i class="fas fa-clock"></i> {{ cart.get_pharmacy.opening_time|time:"H:i" }} - {{ cart.get_pharmacy.closing_time|time:"H:i" }}</p>
+                {% if pharmacy_info.opening_time and pharmacy_info.closing_time %}
+                    <p class="mb-0"><i class="fas fa-clock"></i> {{ pharmacy_info.opening_time|time:"H:i" }} - {{ pharmacy_info.closing_time|time:"H:i" }}</p>
                 {% endif %}
             </div>
         </div>

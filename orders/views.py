@@ -16,7 +16,11 @@ from users.models import ClientProfile
 def cart_detail(request):
     """Vista del carrito de compras"""
     cart = Cart(request)
-    return render(request, 'orders/cart_detail.html', {'cart': cart})
+    cart_total = cart.get_total_price()
+    return render(request, 'orders/cart_detail.html', {
+        'cart': cart,
+        'cart_total': cart_total,
+    })
 
 
 @login_required
@@ -87,10 +91,16 @@ def checkout(request):
     else:
         form = OrderForm()
 
+    # Variables calculadas para el template
+    cart_total = cart.get_total_price()
+    pharmacy_info = cart.get_pharmacy()
+
     return render(request, 'orders/checkout.html', {
         'cart': cart,
         'form': form,
         'client_profile': client_profile,
+        'cart_total': cart_total,
+        'pharmacy_info': pharmacy_info,
     })
 
 
@@ -150,6 +160,8 @@ def order_detail(request, order_id):
         can_review = (order.order_status == 'delivered' and not hasattr(order, 'review'))
         can_pay = (order.payment_status == 'pending' and order.order_status == 'pending')
         is_pharmacy_view = False
+        is_client_view = True
+        order_status_choices = []  # Clientes no pueden cambiar estado
     else:
         # Para farmacias, verificar que la orden pertenece a sus productos
         from users.models import PharmacyProfile
@@ -159,12 +171,17 @@ def order_detail(request, order_id):
         can_review = False
         can_pay = False
         is_pharmacy_view = True
+        is_client_view = False
+        # Todas las opciones de estado para farmacias
+        order_status_choices = Order.ORDER_STATUS_CHOICES
 
     context = {
         'order': order,
         'can_review': can_review,
         'can_pay': can_pay,
         'is_pharmacy_view': is_pharmacy_view,
+        'is_client_view': is_client_view,
+        'order_status_choices': order_status_choices,
     }
     return render(request, 'orders/order_detail.html', context)
 
@@ -177,12 +194,21 @@ def order_list(request):
     if request.user.user_type == 'client':
         client_profile = get_object_or_404(ClientProfile, user=request.user)
         orders = Order.objects.filter(client=client_profile).order_by('-created_at')
+        is_client = True
+        is_pharmacy = False
     else:
         # Para farmacias, mostrar órdenes de sus productos
         pharmacy_profile = get_object_or_404(PharmacyProfile, user=request.user)
         orders = Order.objects.filter(pharmacy=pharmacy_profile).order_by('-created_at')
+        is_client = False
+        is_pharmacy = True
 
-    return render(request, 'orders/order_list.html', {'orders': orders})
+    context = {
+        'orders': orders,
+        'is_client': is_client,
+        'is_pharmacy': is_pharmacy,
+    }
+    return render(request, 'orders/order_list.html', context)
 
 
 @login_required
@@ -210,7 +236,28 @@ def update_order_status(request, order_id):
 
     if request.method == 'POST':
         new_status = request.POST.get('status')
-        if new_status in ['confirmed', 'preparing', 'ready_for_delivery']:
+        # Permitir todos los estados de ORDER_STATUS_CHOICES
+        valid_statuses = [choice[0] for choice in Order.ORDER_STATUS_CHOICES]
+        if new_status in valid_statuses:
+            # Si el estado seleccionado es el mismo que el actual
+            if new_status == order.order_status:
+                # Verificar si hay un estado siguiente lógico en el flujo
+                status_flow = ['pending', 'paid', 'confirmed', 'preparing', 'ready_for_delivery', 'in_delivery', 'delivered', 'cancelled']
+                current_index = status_flow.index(order.order_status) if order.order_status in status_flow else -1
+
+                if current_index >= 0 and current_index < len(status_flow) - 1:
+                    next_status = status_flow[current_index + 1]
+                    # Solo permitir avanzar al siguiente estado lógico (excepto cancelled que es especial)
+                    if next_status != 'cancelled':
+                        new_status = next_status
+                        messages.info(request, f'Actualizando automáticamente al siguiente estado: {Order.ORDER_STATUS_CHOICES[current_index + 1][1]}')
+                    else:
+                        messages.warning(request, f'La orden ya está en estado final: {order.get_order_status_display()}. No se puede avanzar más.')
+                        return redirect('orders:order_detail', order_id=order.id)
+                else:
+                    messages.warning(request, f'La orden ya está en estado final: {order.get_order_status_display()}. No se puede actualizar más.')
+                    return redirect('orders:order_detail', order_id=order.id)
+
             # Si la orden se confirma (pago confirmado), descontar stock automáticamente
             if new_status == 'confirmed' and order.order_status == 'paid':
                 # Descontar stock de cada producto en la orden

@@ -45,12 +45,18 @@ def product_list(request, category_slug=None):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    # Variables calculadas para el template
+    is_client = request.user.is_authenticated and request.user.user_type == 'client'
+    is_pharmacy = request.user.is_authenticated and request.user.user_type == 'pharmacy'
+
     context = {
         'category': category,
         'categories': categories,
         'page_obj': page_obj,
         'search_query': search_query,
         'sort_by': sort_by,
+        'is_client': is_client,
+        'is_pharmacy': is_pharmacy,
     }
     return render(request, 'products/product_list.html', context)
 
@@ -207,7 +213,7 @@ def pharmacy_products(request):
     active_products = pharmacy.products.filter(is_active=True).count()
     low_stock_products = pharmacy.products.filter(stock_quantity__lte=10, is_active=True).count()
     prescription_products = pharmacy.products.filter(requires_prescription=True, is_active=True).count()
-    empty_stock_products = pharmacy.products.filter(stock_quantity__lte=0, is_active=True).count()
+    empty_stock_products = pharmacy.products.filter(stock_quantity=0, is_active=True).count()
 
     # Paginación
     paginator = Paginator(products, 12)

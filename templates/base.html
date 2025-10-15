@@ -12,11 +12,11 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg {% if user.is_authenticated and user.user_type == 'pharmacy' %}navbar-dark bg-dark{% else %}navbar-dark bg-primary{% endif %}">
+    <nav class="navbar navbar-expand-lg {% if is_pharmacy %}navbar-dark bg-dark{% else %}navbar-dark bg-primary{% endif %}">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="{% if user.is_authenticated and user.user_type == 'pharmacy' %}{% url 'users:pharmacy_dashboard' %}{% else %}{% url 'users:home' %}{% endif %}">
+            <a class="navbar-brand fw-bold" href="{% if is_pharmacy %}{% url 'users:pharmacy_dashboard' %}{% else %}{% url 'users:home' %}{% endif %}">
                 <i class="fas fa-pills me-2"></i> FarmaYa
-                {% if user.is_authenticated and user.user_type == 'pharmacy' %}
+                {% if is_pharmacy %}
                     <small class="text-muted ms-2">Panel Farmacia</small>
                 {% endif %}
             </a>
@@ -26,7 +26,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     {% if user.is_authenticated %}
-                        {% if user.user_type == 'client' %}
+                        {% if is_client %}
                             <!-- Navegación Cliente -->
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'products:product_list' %}">
@@ -79,12 +79,12 @@
                 </ul>
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
-                        {% if user.user_type == 'client' %}
+                        {% if is_client %}
                             <li class="nav-item">
                                 <a class="nav-link position-relative" href="{% url 'orders:cart_detail' %}">
                                     <i class="fas fa-shopping-cart"></i> Carrito
-                                    {% if request.session.cart %}
-                                        <span class="badge bg-danger ms-1">{{ request.session.cart|length }}</span>
+                                    {% if cart_items_count %}
+                                        <span class="badge bg-danger ms-1">{{ cart_items_count }}</span>
                                     {% endif %}
                                 </a>
                             </li>
@@ -97,8 +97,8 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                                 <i class="fas fa-user"></i>
-                                {% if user.user_type == 'pharmacy' %}
-                                    {{ user.pharmacy_profile.pharmacy_name|truncatechars:20 }}
+                                {% if is_pharmacy %}
+                                    {{ pharmacy_name|truncatechars:20 }}
                                 {% else %}
                                     {{ user.get_full_name|default:user.username }}
                                 {% endif %}
@@ -107,7 +107,7 @@
                                 <li><a class="dropdown-item" href="{% url 'users:profile' %}">
                                     <i class="fas fa-user-circle"></i> Perfil
                                 </a></li>
-                                {% if user.user_type == 'pharmacy' %}
+                                {% if is_pharmacy %}
                                     <li><a class="dropdown-item" href="{% url 'users:pharmacy_dashboard' %}">
                                         <i class="fas fa-tachometer-alt"></i> Dashboard
                                     </a></li>

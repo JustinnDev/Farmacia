@@ -213,74 +213,98 @@
 
         <!-- Panel de Gestión para Farmacias -->
         {% if is_pharmacy_view %}
+            <div class="alert alert-info mb-4">
+                <h6><i class="fas fa-info-circle"></i> Gestión de Orden</h6>
+                <p class="mb-0">Como farmacia, puedes gestionar el estado de esta orden y coordinar la entrega.</p>
+            </div>
+
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="fas fa-cog"></i> Gestión de Orden</h5>
                 </div>
                 <div class="card-body">
-                    {% if order.order_status == 'paid' %}
-                        <p class="text-success mb-3"><i class="fas fa-check-circle"></i> Orden pagada y lista para preparación</p>
+                    <!-- Estado actual de la orden -->
+                    <div class="mb-3">
+                        <strong>Estado Actual:</strong>
+                        <span class="badge
+                            {% if order.order_status == 'pending' %}bg-warning
+                            {% elif order.order_status == 'paid' %}bg-info
+                            {% elif order.order_status == 'confirmed' %}bg-primary
+                            {% elif order.order_status == 'preparing' %}bg-secondary
+                            {% elif order.order_status == 'ready_for_delivery' %}bg-success
+                            {% elif order.order_status == 'in_delivery' %}bg-info
+                            {% elif order.order_status == 'delivered' %}bg-success
+                            {% else %}bg-danger{% endif %}">
+                            {{ order.get_order_status_display }}
+                        </span>
+                    </div>
 
-                        {% if order.order_status == 'paid' %}
-                            <form method="post" action="{% url 'orders:update_status' order.id %}" class="mb-3">
-                                {% csrf_token %}
-                                <input type="hidden" name="status" value="confirmed">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="fas fa-check"></i> Confirmar Orden
+                    <!-- Selector de estado completo -->
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Cambiar Estado de Orden:</strong></label>
+                        <form method="post" action="{% url 'orders:update_status' order.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <div class="input-group">
+                                <select name="status" class="form-select" required>
+                                    <option value="">Seleccionar nuevo estado</option>
+                                    {% for status_value, status_display in order_status_choices %}
+                                        <option value="{{ status_value }}" {% if order.order_status == status_value %}selected{% endif %}>
+                                            {{ status_display }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Actualizar
                                 </button>
-                            </form>
-                        {% endif %}
-
-                        {% if order.order_status == 'confirmed' %}
-                            <form method="post" action="{% url 'orders:update_status' order.id %}" class="mb-3">
-                                {% csrf_token %}
-                                <input type="hidden" name="status" value="preparing">
-                                <button type="submit" class="btn btn-info w-100">
-                                    <i class="fas fa-clock"></i> Iniciar Preparación
-                                </button>
-                            </form>
-                        {% endif %}
-
-                        {% if order.order_status == 'preparing' %}
-                            <form method="post" action="{% url 'orders:update_status' order.id %}" class="mb-3">
-                                {% csrf_token %}
-                                <input type="hidden" name="status" value="ready_for_delivery">
-                                <button type="submit" class="btn btn-success w-100">
-                                    <i class="fas fa-box"></i> Listo para Entrega
-                                </button>
-                            </form>
-                        {% endif %}
-
-                        {% if order.order_status == 'ready_for_delivery' %}
-                            <div class="mb-3">
-                                <label class="form-label"><strong>Seleccionar Método de Entrega:</strong></label>
-                                <form method="post" action="{% url 'orders:start_delivery' order.id %}" class="mb-2">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="delivery_type" value="internal">
-                                    <button type="submit" class="btn btn-warning w-100 mb-2">
-                                        <i class="fas fa-truck"></i> Delivery Interno
-                                    </button>
-                                </form>
-                                <form method="post" action="{% url 'orders:start_delivery' order.id %}">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="delivery_type" value="external">
-                                    <div class="mb-2">
-                                        <select name="external_service" class="form-select" required>
-                                            <option value="">Seleccionar servicio externo</option>
-                                            <option value="ridery">Ridery</option>
-                                            <option value="yummy">Yummy</option>
-                                            <option value="didi">DiDi</option>
-                                        </select>
-                                    </div>
-                                    <button type="submit" class="btn btn-secondary w-100">
-                                        <i class="fas fa-external-link-alt"></i> Delivery Externo
-                                    </button>
-                                </form>
                             </div>
-                        {% endif %}
+                        </form>
+                    </div>
 
-                    {% else %}
-                        <p class="text-warning"><i class="fas fa-clock"></i> Esperando confirmación de pago</p>
+                    <!-- Acciones rápidas basadas en estado actual -->
+                    {% if order.order_status == 'paid' %}
+                        <div class="alert alert-info">
+                            <small><i class="fas fa-info-circle"></i> <strong>Sugerencia:</strong> Confirma la orden para comenzar la preparación</small>
+                        </div>
+                    {% endif %}
+
+                    {% if order.order_status == 'confirmed' %}
+                        <div class="alert alert-info">
+                            <small><i class="fas fa-info-circle"></i> <strong>Sugerencia:</strong> Inicia la preparación de los productos</small>
+                        </div>
+                    {% endif %}
+
+                    {% if order.order_status == 'preparing' %}
+                        <div class="alert alert-info">
+                            <small><i class="fas fa-info-circle"></i> <strong>Sugerencia:</strong> Marca como listo para entrega cuando esté preparado</small>
+                        </div>
+                    {% endif %}
+
+                    {% if order.order_status == 'ready_for_delivery' %}
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Seleccionar Método de Entrega:</strong></label>
+                            <form method="post" action="{% url 'orders:start_delivery' order.id %}" class="mb-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="delivery_type" value="internal">
+                                <button type="submit" class="btn btn-warning w-100 mb-2">
+                                    <i class="fas fa-truck"></i> Delivery Interno
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'orders:start_delivery' order.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="delivery_type" value="external">
+                                <div class="mb-2">
+                                    <select name="external_service" class="form-select" required>
+                                        <option value="">Seleccionar servicio externo</option>
+                                        <option value="ridery">Ridery</option>
+                                        <option value="yummy">Yummy</option>
+                                        <option value="didi">DiDi</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-secondary w-100">
+                                    <i class="fas fa-external-link-alt"></i> Delivery Externo
+                                </button>
+                            </form>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -305,7 +329,7 @@
                     <h5 class="mb-0">Acciones Rápidas</h5>
                 </div>
                 <div class="card-body">
-                    {% if user.user_type == 'client' %}
+                    {% if is_client_view %}
                         <div class="row g-2">
                             <div class="col-6">
                                 <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary w-100">
