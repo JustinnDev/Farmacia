@@ -166,33 +166,6 @@
                                                 <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-outline-primary" title="Ver detalles">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                {% if is_pharmacy %}
-                                                    {% if order.order_status == 'paid' %}
-                                                        <form method="post" action="{% url 'orders:update_status' order.id %}" class="d-inline">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="status" value="confirmed">
-                                                            <button type="submit" class="btn btn-success" title="Confirmar pago y descontar stock">
-                                                                <i class="fas fa-check"></i>
-                                                            </button>
-                                                        </form>
-                                                    {% elif order.order_status == 'confirmed' %}
-                                                        <form method="post" action="{% url 'orders:update_status' order.id %}" class="d-inline">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="status" value="preparing">
-                                                            <button type="submit" class="btn btn-info" title="Iniciar preparación">
-                                                                <i class="fas fa-play"></i>
-                                                            </button>
-                                                        </form>
-                                                    {% elif order.order_status == 'preparing' %}
-                                                        <form method="post" action="{% url 'orders:update_status' order.id %}" class="d-inline">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="status" value="ready_for_delivery">
-                                                            <button type="submit" class="btn btn-warning" title="Marcar como listo">
-                                                                <i class="fas fa-check-double"></i>
-                                                            </button>
-                                                        </form>
-                                                    {% endif %}
-                                                {% endif %}
                                             </div>
                                         </td>
                                     </tr>
