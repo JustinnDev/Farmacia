@@ -89,3 +89,88 @@ def pharmacy_detail(request, pharmacy_id):
         'total_products': pharmacy.products.filter(is_active=True).count(),
     }
     return render(request, 'users/pharmacy_detail.html', context)
+
+
+@login_required
+def pharmacy_dashboard(request):
+    """Dashboard específico para farmacias con métricas y acciones rápidas"""
+    if request.user.user_type != 'pharmacy':
+        messages.error(request, 'Esta página es solo para farmacias.')
+        return redirect('users:profile')
+
+    from django.utils import timezone
+    from orders.models import Order
+
+    pharmacy = get_object_or_404(PharmacyProfile, user=request.user)
+
+    # Métricas principales
+    today = timezone.now().date()
+    this_month = today.replace(day=1)
+
+    # Órdenes del día
+    today_orders = Order.objects.filter(
+        pharmacy=pharmacy,
+        created_at__date=today
+    ).count()
+
+    # Órdenes pendientes de confirmación
+    pending_orders = Order.objects.filter(
+        pharmacy=pharmacy,
+        order_status='paid'
+    ).count()
+
+    # Órdenes en preparación
+    preparing_orders = Order.objects.filter(
+        pharmacy=pharmacy,
+        order_status='preparing'
+    ).count()
+
+    # Órdenes listas para entrega
+    ready_orders = Order.objects.filter(
+        pharmacy=pharmacy,
+        order_status='ready_for_delivery'
+    ).count()
+
+    # Productos con stock bajo (< 10 unidades)
+    low_stock_products = pharmacy.products.filter(
+        stock_quantity__lte=10,
+        is_active=True
+    ).count()
+
+    # Ventas del mes
+    monthly_sales = Order.objects.filter(
+        pharmacy=pharmacy,
+        created_at__date__gte=this_month,
+        order_status__in=['paid', 'confirmed', 'preparing', 'ready_for_delivery', 'in_delivery', 'delivered']
+    ).count()
+
+    # Órdenes recientes (últimas 5)
+    recent_orders = Order.objects.filter(
+        pharmacy=pharmacy
+    ).order_by('-created_at')[:5]
+
+    # Productos más vendidos (último mes)
+    from django.db.models import Sum
+    top_products = pharmacy.products.filter(
+        orderitem__order__created_at__date__gte=this_month
+    ).annotate(
+        total_sold=Sum('orderitem__quantity')
+    ).order_by('-total_sold')[:5]
+
+    # Productos activos
+    active_products_count = pharmacy.products.filter(is_active=True).count()
+
+    context = {
+        'pharmacy': pharmacy,
+        'today_orders': today_orders,
+        'pending_orders': pending_orders,
+        'preparing_orders': preparing_orders,
+        'ready_orders': ready_orders,
+        'low_stock_products': low_stock_products,
+        'monthly_sales': monthly_sales,
+        'active_products_count': active_products_count,
+        'recent_orders': recent_orders,
+        'top_products': top_products,
+    }
+
+    return render(request, 'users/pharmacy_dashboard.html', context)

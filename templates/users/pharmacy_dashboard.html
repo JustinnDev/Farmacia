@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - {{ pharmacy.pharmacy_name }} - FarmaYa{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2 mb-1">
+                    <i class="fas fa-tachometer-alt text-primary me-2"></i>
+                    Dashboard de {{ pharmacy.pharmacy_name }}
+                </h1>
+                <p class="text-muted mb-0">Panel de control y métricas de tu farmacia</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'products:product_create' %}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Nuevo Producto
+                </a>
+                <a href="{% url 'orders:order_list' %}" class="btn btn-primary">
+                    <i class="fas fa-list"></i> Ver Órdenes
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Métricas principales -->
+<div class="row mb-4">
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card h-100 border-primary">
+            <div class="card-body text-center">
+                <div class="display-4 text-primary mb-2">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <h3 class="h4 mb-1">{{ today_orders }}</h3>
+                <p class="text-muted mb-0">Órdenes Hoy</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card h-100 border-warning">
+            <div class="card-body text-center">
+                <div class="display-4 text-warning mb-2">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3 class="h4 mb-1">{{ pending_orders }}</h3>
+                <p class="text-muted mb-0">Pendientes</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card h-100 border-info">
+            <div class="card-body text-center">
+                <div class="display-4 text-info mb-2">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <h3 class="h4 mb-1">{{ preparing_orders }}</h3>
+                <p class="text-muted mb-0">En Preparación</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card h-100 border-success">
+            <div class="card-body text-center">
+                <div class="display-4 text-success mb-2">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <h3 class="h4 mb-1">{{ ready_orders }}</h3>
+                <p class="text-muted mb-0">Listas para Entrega</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alertas importantes -->
+{% if pending_orders > 0 or low_stock_products > 0 %}
+<div class="row mb-4">
+    <div class="col-12">
+        {% if pending_orders > 0 %}
+            <div class="alert alert-warning d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <div>
+                    <strong>{{ pending_orders }} órdenes pendientes</strong> de confirmación de pago.
+                    <a href="{% url 'orders:order_list' %}?status=paid" class="alert-link">Revisar ahora</a>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if low_stock_products > 0 %}
+            <div class="alert alert-danger d-flex align-items-center">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <div>
+                    <strong>{{ low_stock_products }} productos</strong> con stock bajo (≤10 unidades).
+                    <a href="{% url 'products:pharmacy_products' %}?filter=low_stock" class="alert-link">Ver productos</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Panel de acciones rápidas -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bolt"></i> Acciones Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3 col-sm-6">
+                        <a href="{% url 'products:product_create' %}" class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center p-3">
+                            <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                            <span>Agregar Producto</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <a href="{% url 'products:pharmacy_products' %}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center p-3">
+                            <i class="fas fa-boxes fa-2x mb-2"></i>
+                            <span>Ver Inventario</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <a href="{% url 'orders:order_list' %}" class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center p-3">
+                            <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                            <span>Gestionar Órdenes</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <a href="{% url 'users:profile' %}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center p-3">
+                            <i class="fas fa-user-cog fa-2x mb-2"></i>
+                            <span>Configurar Perfil</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Órdenes recientes y productos más vendidos -->
+<div class="row">
+    <!-- Órdenes recientes -->
+    <div class="col-lg-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Órdenes Recientes</h5>
+                <a href="{% url 'orders:order_list' %}" class="btn btn-sm btn-outline-primary">Ver Todas</a>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Orden</th>
+                                    <th>Cliente</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                    <tr>
+                                        <td>
+                                            <strong>#{{ order.order_number }}</strong>
+                                        </td>
+                                        <td>{{ order.client.user.get_full_name|default:order.client.user.username }}</td>
+                                        <td>
+                                            <span class="badge
+                                                {% if order.order_status == 'pending' %}bg-warning
+                                                {% elif order.order_status == 'paid' %}bg-info
+                                                {% elif order.order_status == 'confirmed' %}bg-primary
+                                                {% elif order.order_status == 'preparing' %}bg-secondary
+                                                {% elif order.order_status == 'ready_for_delivery' %}bg-success
+                                                {% elif order.order_status == 'in_delivery' %}bg-info
+                                                {% elif order.order_status == 'delivered' %}bg-success
+                                                {% else %}bg-danger{% endif %}">
+                                                {{ order.get_order_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ order.created_at|date:"d/m H:i" }}</td>
+                                        <td>
+                                            <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay órdenes recientes</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos más vendidos -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line"></i> Más Vendidos (Mes)</h5>
+            </div>
+            <div class="card-body">
+                {% if top_products %}
+                    {% for product in top_products %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0 me-3">
+                                {% if product.main_image %}
+                                    <img src="{{ product.main_image.url }}" alt="{{ product.name }}"
+                                         class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                         style="width: 40px; height: 40px;">
+                                        <i class="fas fa-pills text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ product.name|truncatechars:25 }}</h6>
+                                <small class="text-muted">{{ product.total_sold }} vendidos</small>
+                            </div>
+                        </div>
+                        {% if not forloop.last %}
+                            <hr class="my-2">
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay datos de ventas</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estadísticas adicionales -->
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Estadísticas del Mes</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="h4 text-primary mb-1">{{ monthly_sales }}</div>
+                        <small class="text-muted">Ventas Totales</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h4 text-success mb-1">{{ active_products_count }}</div>
+                        <small class="text-muted">Productos Activos</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-star"></i> Reputación</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="h4 text-warning mb-1">
+                            {% for i in "12345"|make_list %}
+                                <i class="fas fa-star{% if pharmacy.rating >= i %} text-warning{% else %} text-muted{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">{{ pharmacy.rating|floatformat:1 }} / 5.0</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h4 text-info mb-1">{{ pharmacy.reviews.count }}</div>
+                        <small class="text-muted">Reseñas</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

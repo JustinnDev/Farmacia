@@ -68,6 +68,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'farmaya.context_processors.user_type',
+                'farmaya.context_processors.pharmacy_context',
             ],
         },
     },

@@ -1,78 +1,206 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if user.user_type == 'client' %}Mis Órdenes{% else %}Órdenes{% endif %} - FarmaYa{% endblock %}
+{% block title %}{% if user.user_type == 'pharmacy' %}Gestión de Órdenes{% else %}Mis Órdenes{% endif %} - FarmaYa{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <h2 class="mb-4"><i class="fas fa-list"></i> {% if user.user_type == 'client' %}Mis Órdenes{% else %}Órdenes{% endif %}</h2>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2 mb-1">
+                    <i class="fas fa-clipboard-list"></i>
+                    {% if user.user_type == 'pharmacy' %}Gestión de Órdenes{% else %}Mis Órdenes{% endif %}
+                </h1>
+                <p class="text-muted mb-0">
+                    {% if user.user_type == 'pharmacy' %}Administra todas las órdenes de tu farmacia{% else %}Historial de tus compras{% endif %}
+                </p>
+            </div>
+            {% if user.user_type == 'pharmacy' %}
+                <div class="d-flex gap-2">
+                    <a href="{% url 'users:pharmacy_dashboard' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a href="{% url 'products:pharmacy_products' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-boxes"></i> Inventario
+                    </a>
+                </div>
+            {% endif %}
+        </div>
 
         {% if orders %}
-            <div class="row">
-                {% for order in orders %}
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0">Orden {{ order.order_number }}</h6>
-                                <span class="badge
-                                    {% if order.order_status == 'pending' %}bg-warning
-                                    {% elif order.order_status == 'paid' %}bg-info
-                                    {% elif order.order_status == 'confirmed' %}bg-primary
-                                    {% elif order.order_status == 'preparing' %}bg-secondary
-                                    {% elif order.order_status == 'ready_for_delivery' %}bg-success
-                                    {% elif order.order_status == 'in_delivery' %}bg-info
-                                    {% elif order.order_status == 'delivered' %}bg-success
-                                    {% else %}bg-danger{% endif %}">
-                                    {{ order.get_order_status_display }}
-                                </span>
+            <!-- Filtros para farmacias -->
+            {% if user.user_type == 'pharmacy' %}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label">Estado</label>
+                                <select class="form-select" id="statusFilter">
+                                    <option value="">Todos los estados</option>
+                                    <option value="pending">Pendiente</option>
+                                    <option value="paid">Pagado</option>
+                                    <option value="confirmed">Confirmado</option>
+                                    <option value="preparing">Preparando</option>
+                                    <option value="ready_for_delivery">Listo para Entrega</option>
+                                    <option value="in_delivery">En Entrega</option>
+                                    <option value="delivered">Entregado</option>
+                                    <option value="cancelled">Cancelado</option>
+                                </select>
                             </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        {% if user.user_type == 'client' %}
-                                            <p class="mb-1"><strong>Farmacia:</strong> {{ order.pharmacy.pharmacy_name }}</p>
-                                        {% else %}
-                                            <p class="mb-1"><strong>Cliente:</strong> {{ order.client.user.username }}</p>
-                                        {% endif %}
-                                        <p class="mb-1"><strong>Fecha:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
-                                        <p class="mb-1"><strong>Productos:</strong> {{ order.items.count }}</p>
-                                        <p class="mb-1"><strong>Entrega:</strong> {{ order.get_delivery_type_display }}</p>
-                                    </div>
-                                    <div class="col-md-4 text-end">
-                                        <p class="h5 text-primary mb-1">{{ order.total }} USD</p>
-                                        <p class="small text-muted mb-2">{{ order.get_payment_status_display }}</p>
-                                        <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-outline-primary btn-sm">
-                                            <i class="fas fa-eye"></i> Ver Detalles
-                                        </a>
-                                    </div>
-                                </div>
-
-                                <!-- Barra de progreso para el estado -->
-                                <div class="mt-3">
-                                    <small class="text-muted">Progreso de la orden:</small>
-                                    <div class="progress mt-1" style="height: 6px;">
-                                        {% with status_order=order.order_status %}
-                                            {% if status_order == 'pending' %}20
-                                            {% elif status_order == 'paid' %}30
-                                            {% elif status_order == 'confirmed' %}40
-                                            {% elif status_order == 'preparing' %}60
-                                            {% elif status_order == 'ready_for_delivery' %}80
-                                            {% elif status_order == 'in_delivery' %}90
-                                            {% elif status_order == 'delivered' %}100
-                                            {% else %}10{% endif %}%
-                                        {% endwith %}
-                                    </div>
-                                    <div class="d-flex justify-content-between small text-muted mt-1">
-                                        <span>Orden</span>
-                                        <span>Preparación</span>
-                                        <span>Entrega</span>
-                                        <span>Completado</span>
-                                    </div>
-                                </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Fecha desde</label>
+                                <input type="date" class="form-control" id="dateFrom">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Fecha hasta</label>
+                                <input type="date" class="form-control" id="dateTo">
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-outline-primary w-100" onclick="filterOrders()">
+                                    <i class="fas fa-filter"></i> Filtrar
+                                </button>
                             </div>
                         </div>
                     </div>
-                {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fas fa-list-ul"></i>
+                        {% if user.user_type == 'pharmacy' %}
+                            {{ orders|length }} órdenes encontradas
+                        {% else %}
+                            {{ orders|length }} órdenes realizadas
+                        {% endif %}
+                    </span>
+                    {% if user.user_type == 'pharmacy' %}
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-secondary" onclick="exportOrders()">
+                                <i class="fas fa-download"></i> Exportar
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="ordersTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Orden #</th>
+                                    {% if user.user_type == 'pharmacy' %}
+                                        <th>Cliente</th>
+                                    {% else %}
+                                        <th>Farmacia</th>
+                                    {% endif %}
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th>Total</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                    <tr class="order-row" data-status="{{ order.order_status }}" data-date="{{ order.created_at|date:'Y-m-d' }}">
+                                        <td>
+                                            <strong class="text-primary">#{{ order.order_number }}</strong>
+                                            {% if user.user_type == 'pharmacy' and order.order_status == 'paid' %}
+                                                <br><small class="text-warning"><i class="fas fa-exclamation-triangle"></i> Requiere confirmación</small>
+                                            {% endif %}
+                                        </td>
+                                        {% if user.user_type == 'pharmacy' %}
+                                            <td>
+                                                <div>
+                                                    <strong>{{ order.client.user.get_full_name|default:order.client.user.username }}</strong>
+                                                    <br><small class="text-muted">{{ order.client.user.email }}</small>
+                                                </div>
+                                            </td>
+                                        {% else %}
+                                            <td>
+                                                <a href="{% url 'users:pharmacy_detail' order.pharmacy.id %}" class="text-decoration-none">
+                                                    <strong>{{ order.pharmacy.pharmacy_name }}</strong>
+                                                </a>
+                                            </td>
+                                        {% endif %}
+                                        <td>
+                                            <div>
+                                                <strong>{{ order.created_at|date:"d/m/Y" }}</strong>
+                                                <br><small class="text-muted">{{ order.created_at|date:"H:i" }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge fs-6
+                                                {% if order.order_status == 'pending' %}bg-warning text-dark
+                                                {% elif order.order_status == 'paid' %}bg-info
+                                                {% elif order.order_status == 'confirmed' %}bg-primary
+                                                {% elif order.order_status == 'preparing' %}bg-secondary
+                                                {% elif order.order_status == 'ready_for_delivery' %}bg-success
+                                                {% elif order.order_status == 'in_delivery' %}bg-info
+                                                {% elif order.order_status == 'delivered' %}bg-success
+                                                {% else %}bg-danger{% endif %}">
+                                                <i class="fas
+                                                    {% if order.order_status == 'pending' %}fa-clock
+                                                    {% elif order.order_status == 'paid' %}fa-check-circle
+                                                    {% elif order.order_status == 'confirmed' %}fa-check-double
+                                                    {% elif order.order_status == 'preparing' %}fa-cog
+                                                    {% elif order.order_status == 'ready_for_delivery' %}fa-box
+                                                    {% elif order.order_status == 'in_delivery' %}fa-truck
+                                                    {% elif order.order_status == 'delivered' %}fa-check-circle
+                                                    {% else %}fa-times-circle{% endif %} me-1">
+                                                </i>
+                                                {{ order.get_order_status_display }}
+                                            </span>
+                                            {% if order.payment_status == 'pending' and order.order_status == 'pending' %}
+                                                <br><small class="text-danger">Pago pendiente</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong class="text-success">{{ order.total }} USD</strong>
+                                            {% if order.delivery_fee %}
+                                                <br><small class="text-muted">Envío: {{ order.delivery_fee }} USD</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-outline-primary" title="Ver detalles">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if user.user_type == 'pharmacy' %}
+                                                    {% if order.order_status == 'paid' %}
+                                                        <form method="post" action="{% url 'orders:update_status' order.id %}" class="d-inline">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="status" value="confirmed">
+                                                            <button type="submit" class="btn btn-success" title="Confirmar pago y descontar stock">
+                                                                <i class="fas fa-check"></i>
+                                                            </button>
+                                                        </form>
+                                                    {% elif order.order_status == 'confirmed' %}
+                                                        <form method="post" action="{% url 'orders:update_status' order.id %}" class="d-inline">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="status" value="preparing">
+                                                            <button type="submit" class="btn btn-info" title="Iniciar preparación">
+                                                                <i class="fas fa-play"></i>
+                                                            </button>
+                                                        </form>
+                                                    {% elif order.order_status == 'preparing' %}
+                                                        <form method="post" action="{% url 'orders:update_status' order.id %}" class="d-inline">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="status" value="ready_for_delivery">
+                                                            <button type="submit" class="btn btn-warning" title="Marcar como listo">
+                                                                <i class="fas fa-check-double"></i>
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- Paginación si es necesario -->
@@ -108,35 +236,64 @@
                 </nav>
             {% endif %}
         {% else %}
-            <div class="text-center py-5">
-                <i class="fas fa-shopping-bag fa-4x text-muted mb-3"></i>
-                {% if user.user_type == 'client' %}
-                    <h4>Aún no has realizado ninguna orden</h4>
-                    <p class="text-muted">Explora nuestros productos y realiza tu primera compra.</p>
-                    <a href="{% url 'products:product_list' %}" class="btn btn-primary">
-                        <i class="fas fa-store"></i> Explorar Productos
-                    </a>
-                {% else %}
-                    <h4>Aún no tienes órdenes</h4>
-                    <p class="text-muted">Las órdenes aparecerán aquí cuando los clientes compren tus productos.</p>
-                {% endif %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    {% if user.user_type == 'pharmacy' %}
+                        <i class="fas fa-clipboard fa-4x text-muted mb-3"></i>
+                        <h4>Aún no tienes órdenes</h4>
+                        <p class="text-muted">Cuando los clientes compren tus productos, aparecerán aquí.</p>
+                        <a href="{% url 'products:product_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Agregar Productos
+                        </a>
+                    {% else %}
+                        <i class="fas fa-shopping-bag fa-4x text-muted mb-3"></i>
+                        <h4>No tienes órdenes aún</h4>
+                        <p class="text-muted">Cuando realices tu primera compra, aparecerá aquí.</p>
+                        <a href="{% url 'products:product_list' %}" class="btn btn-primary">
+                            <i class="fas fa-store"></i> Explorar Productos
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         {% endif %}
     </div>
 </div>
 
-<style>
-.progress {
-    background-color: #e9ecef;
+<script>
+// Función de filtrado para farmacias
+function filterOrders() {
+    const statusFilter = document.getElementById('statusFilter').value;
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+
+    const rows = document.querySelectorAll('.order-row');
+
+    rows.forEach(row => {
+        let show = true;
+
+        // Filtro por estado
+        if (statusFilter && row.dataset.status !== statusFilter) {
+            show = false;
+        }
+
+        // Filtro por fecha
+        if (dateFrom || dateTo) {
+            const orderDate = new Date(row.dataset.date);
+            if (dateFrom && orderDate < new Date(dateFrom)) {
+                show = false;
+            }
+            if (dateTo && orderDate > new Date(dateTo + 'T23:59:59')) {
+                show = false;
+            }
+        }
+
+        row.style.display = show ? '' : 'none';
+    });
 }
 
-.page-link {
-    color: #0d6efd;
+// Función de exportación (placeholder)
+function exportOrders() {
+    alert('Funcionalidad de exportación próximamente disponible');
 }
-
-.page-item.active .page-link {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-}
-</style>
+</script>
 {% endblock %}
