@@ -149,10 +149,13 @@ searchInput.addEventListener('keydown', function(e) {
                                 <form method="get" action="{% url 'products:product_search' %}">
                                     <div class="input-group">
                                         <input type="text" class="form-control form-control-lg border-0 shadow-none"
-                                               id="searchInput" name="q"
-                                               placeholder="Buscar productos por nombre, marca o descripción..."
-                                               value="{{ search_query }}" autocomplete="off"
-                                               style="font-size: 1.1rem; padding: 1rem 1.5rem;">
+                                                id="searchInput" name="q"
+                                                placeholder="Buscar productos por nombre, marca o descripción..."
+                                                value="{{ search_query }}" autocomplete="off"
+                                                style="font-size: 1.1rem; padding: 1rem 1.5rem;">
+                                        <button class="btn btn-outline-secondary" type="submit">
+                                            <i class="fas fa-search"></i>
+                                        </button>
                                     </div>
                                 </form>
                             </div>

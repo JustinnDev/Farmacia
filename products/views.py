@@ -18,6 +18,8 @@ def product_list(request, category_slug=None):
     categories = Category.objects.all()
     products = Product.objects.filter(is_active=True)
 
+    print("-------------------------------------------")
+
     # Filtrar por categoría si se especifica
     if category_slug:
         category = get_object_or_404(Category, slug=category_slug)
@@ -32,8 +34,13 @@ def product_list(request, category_slug=None):
             Q(brand__icontains=search_query)
         )
 
+
+
     # Ordenamiento
     sort_by = request.GET.get('sort', 'name')
+
+    print(sort_by)
+
     if sort_by == 'price_low':
         products = products.order_by('price')
     elif sort_by == 'price_high':
@@ -82,10 +89,17 @@ def product_search(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    # Variables calculadas para el template
+    is_client = request.user.is_authenticated and request.user.user_type == 'client'
+    is_pharmacy = request.user.is_authenticated and request.user.user_type == 'pharmacy'
+
     context = {
         'page_obj': page_obj,
         'query': query,
+        'search_query': query,  # Para mantener consistencia con product_list
         'search_results': True,
+        'is_client': is_client,
+        'is_pharmacy': is_pharmacy,
     }
     return render(request, 'products/product_list.html', context)
 
