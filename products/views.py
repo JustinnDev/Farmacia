@@ -74,6 +74,7 @@ def product_list(request, category_slug=None):
 def product_search(request):
     """Vista de búsqueda de productos"""
     query = request.GET.get('q', '')
+    categories = Category.objects.all()
     products = Product.objects.filter(is_active=True)
 
     if query:
@@ -83,6 +84,17 @@ def product_search(request):
             Q(brand__icontains=query) |
             Q(pharmacy__pharmacy_name__icontains=query)
         )
+
+    # Ordenamiento
+    sort_by = request.GET.get('sort', 'name')
+    if sort_by == 'price_low':
+        products = products.order_by('price')
+    elif sort_by == 'price_high':
+        products = products.order_by('-price')
+    elif sort_by == 'rating':
+        products = products.order_by('-pharmacy__rating')
+    else:
+        products = products.order_by('name')
 
     # Paginación
     paginator = Paginator(products, 12)
@@ -98,6 +110,8 @@ def product_search(request):
         'query': query,
         'search_query': query,  # Para mantener consistencia con product_list
         'search_results': True,
+        'categories': categories,
+        'sort_by': sort_by,
         'is_client': is_client,
         'is_pharmacy': is_pharmacy,
     }
