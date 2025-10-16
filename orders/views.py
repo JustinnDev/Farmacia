@@ -10,6 +10,7 @@ from .forms import OrderForm, PaymentForm, ReviewForm
 from .cart import Cart
 from products.models import Product
 from users.models import ClientProfile
+from users.decorators import pharmacy_required
 
 
 @login_required
@@ -223,12 +224,9 @@ def delivery_status(request, order_id):
     })
 
 
-@login_required
+@pharmacy_required
 def update_order_status(request, order_id):
     """Vista para que farmacias actualicen el estado de las órdenes"""
-    if request.user.user_type != 'pharmacy':
-        messages.error(request, 'Solo las farmacias pueden gestionar órdenes.')
-        return redirect('users:profile')
 
     from users.models import PharmacyProfile
     pharmacy = get_object_or_404(PharmacyProfile, user=request.user)
@@ -280,12 +278,9 @@ def update_order_status(request, order_id):
     return redirect('orders:order_detail', order_id=order.id)
 
 
-@login_required
+@pharmacy_required
 def start_delivery(request, order_id):
     """Vista para iniciar el proceso de entrega"""
-    if request.user.user_type != 'pharmacy':
-        messages.error(request, 'Solo las farmacias pueden gestionar entregas.')
-        return redirect('users:profile')
 
     from users.models import PharmacyProfile
     pharmacy = get_object_or_404(PharmacyProfile, user=request.user)

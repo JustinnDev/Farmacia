@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.urls import reverse
 from .models import CustomUser, PharmacyProfile, ClientProfile
 from .forms import UserRegistrationForm, PharmacyProfileForm, ClientProfileForm
+from .decorators import pharmacy_required
 
 
 def home(request):
@@ -91,12 +92,9 @@ def pharmacy_detail(request, pharmacy_id):
     return render(request, 'users/pharmacy_detail.html', context)
 
 
-@login_required
+@pharmacy_required
 def pharmacy_dashboard(request):
     """Dashboard específico para farmacias con métricas y acciones rápidas"""
-    if request.user.user_type != 'pharmacy':
-        messages.error(request, 'Esta página es solo para farmacias.')
-        return redirect('users:profile')
 
     from django.utils import timezone
     from orders.models import Order

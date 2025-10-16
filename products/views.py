@@ -10,6 +10,7 @@ from django.views.decorators.http import require_GET
 from .models import Product, Category
 from .forms import ProductForm, ProductVariantFormSet, ProductImageFormSet
 from users.models import PharmacyProfile
+from users.decorators import pharmacy_required
 
 
 def product_list(request, category_slug=None):
@@ -134,12 +135,9 @@ def product_detail(request, product_id):
     return render(request, 'products/product_detail.html', context)
 
 
-@login_required
+@pharmacy_required
 def product_create(request):
     """Vista para crear un nuevo producto (solo farmacias)"""
-    if request.user.user_type != 'pharmacy':
-        messages.error(request, 'Solo las farmacias pueden agregar productos.')
-        return redirect('users:profile')
 
     pharmacy = get_object_or_404(PharmacyProfile, user=request.user)
 
@@ -230,12 +228,9 @@ def product_delete(request, product_id):
     return render(request, 'products/product_confirm_delete.html', context)
 
 
-@login_required
+@pharmacy_required
 def pharmacy_products(request):
     """Vista para que las farmacias vean y gestionen sus productos"""
-    if request.user.user_type != 'pharmacy':
-        messages.error(request, 'Esta página es solo para farmacias.')
-        return redirect('users:profile')
 
     pharmacy = get_object_or_404(PharmacyProfile, user=request.user)
     products = Product.objects.filter(pharmacy=pharmacy).order_by('-created_at')
