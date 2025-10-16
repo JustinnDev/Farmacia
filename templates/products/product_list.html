@@ -67,25 +67,25 @@ function displayResults(results) {
         const item = document.createElement('div');
         item.className = 'autocomplete-item p-2 border-bottom cursor-pointer';
         item.onclick = () => {
-            window.location.href = `/products/${product.id}/`;
+            // Completar el campo de búsqueda con el nombre del producto
+            searchInput.value = product.name;
+            // Ocultar las sugerencias
+            autocompleteResults.classList.remove('show');
+            autocompleteResults.classList.add('hide');
+            setTimeout(() => {
+                autocompleteResults.style.display = '';
+            }, 200);
+            // Ejecutar automáticamente la búsqueda
+            searchInput.form.submit();
         };
 
         item.innerHTML = `
             <div class="d-flex align-items-center">
                 <div class="flex-shrink-0 me-2">
-                    ${product.image_url ?
-                        `<img src="${product.image_url}" alt="${product.name}" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">` :
-                        `<div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            <i class="fas fa-pills text-muted"></i>
-                        </div>`
-                    }
+                    <i class="fas fa-search text-muted"></i>
                 </div>
                 <div class="flex-grow-1">
-                    <div class="fw-bold text-truncate">${product.name}</div>
-                    <small class="text-muted">${product.category} • ${product.pharmacy}</small>
-                </div>
-                <div class="flex-shrink-0 text-end">
-                    <div class="fw-bold text-success">${product.price.toFixed(2)} USD</div>
+                    <div class="fw-bold">${product.name}</div>
                 </div>
             </div>
         `;
@@ -141,7 +141,7 @@ searchInput.addEventListener('keydown', function(e) {
 
     <div class="row justify-content-center">
         <div class="col-12 col-lg-10">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm" style="overflow: visible;">
                 <div class="card-body py-4">
                     <div class="row align-items-center">
                         <div class="col-md-8">
@@ -158,21 +158,7 @@ searchInput.addEventListener('keydown', function(e) {
                             </div>
                         </div>
                         <div class="col-md-4 text-end">
-                            <div class="dropdown">
-                                <button class="btn btn-outline-secondary btn-lg dropdown-toggle px-4" type="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-sort me-2"></i> Ordenar
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item py-2" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=name">
-                                        <i class="fas fa-sort-alpha-down me-2"></i>Nombre</a></li>
-                                    <li><a class="dropdown-item py-2" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=price_low">
-                                        <i class="fas fa-sort-numeric-down me-2"></i>Precio: Menor a Mayor</a></li>
-                                    <li><a class="dropdown-item py-2" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=price_high">
-                                        <i class="fas fa-sort-numeric-up me-2"></i>Precio: Mayor a Mayor</a></li>
-                                    <li><a class="dropdown-item py-2" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=rating">
-                                        <i class="fas fa-star me-2"></i>Calificación</a></li>
-                                </ul>
-                            </div>
+                            <!-- Espacio vacío para mantener el layout -->
                         </div>
                     </div>
                 </div>
@@ -181,7 +167,7 @@ searchInput.addEventListener('keydown', function(e) {
     </div>
 </div>
 
-<div class="row">
+<div class="row" style="position: relative; z-index: 1;">
     <div class="col-md-3" style="position: relative;">
         <!-- Sidebar con filtros -->
         <div class="card mb-4">
@@ -204,6 +190,33 @@ searchInput.addEventListener('keydown', function(e) {
                         </li>
                     {% endfor %}
                 </ul>
+            </div>
+        </div>
+
+        <!-- Filtros de ordenamiento -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Ordenar por</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=name"
+                       class="btn btn-outline-secondary btn-sm {% if sort_by == 'name' %}active{% endif %}">
+                        <i class="fas fa-sort-alpha-down me-2"></i>Nombre
+                    </a>
+                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=price_low"
+                       class="btn btn-outline-secondary btn-sm {% if sort_by == 'price_low' %}active{% endif %}">
+                        <i class="fas fa-sort-numeric-down me-2"></i>Precio: Menor a Mayor
+                    </a>
+                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=price_high"
+                       class="btn btn-outline-secondary btn-sm {% if sort_by == 'price_high' %}active{% endif %}">
+                        <i class="fas fa-sort-numeric-up me-2"></i>Precio: Mayor a Mayor
+                    </a>
+                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=rating"
+                       class="btn btn-outline-secondary btn-sm {% if sort_by == 'rating' %}active{% endif %}">
+                        <i class="fas fa-star me-2"></i>Calificación
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -232,13 +245,6 @@ searchInput.addEventListener('keydown', function(e) {
                             <i class="fas fa-list"></i> Mis Productos
                         </a>
                     </div>
-                {% else %}
-                    <a href="{% url 'orders:cart_detail' %}" class="btn btn-success w-100 w-sm-auto">
-                        <i class="fas fa-shopping-cart"></i> Ver Carrito
-                        {% if cart_items_count %}
-                            <span class="badge bg-danger ms-1">{{ cart_items_count }}</span>
-                        {% endif %}
-                    </a>
                 {% endif %}
             {% endif %}
         </div>

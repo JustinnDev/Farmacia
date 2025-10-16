@@ -238,29 +238,22 @@ def pharmacy_products(request):
 @require_GET
 @cache_page(60 * 15)  # Cache por 15 minutos
 def autocomplete(request):
-    """Endpoint API para autocompletado de productos"""
+    """Endpoint API para autocompletado de productos - solo nombres para completar la búsqueda"""
     query = request.GET.get('q', '').strip()
 
     if len(query) < 2:
         return JsonResponse({'results': []})
 
-    # Buscar productos que coincidan con la query
-    products = Product.objects.filter(
+    # Buscar nombres de productos únicos que coincidan con la query
+    product_names = Product.objects.filter(
         Q(is_active=True) &
-        (Q(name__icontains=query) |
-         Q(description__icontains=query) |
-         Q(brand__icontains=query))
-    ).select_related('category', 'pharmacy')[:10]  # Máximo 10 resultados
+        Q(name__icontains=query)
+    ).values_list('name', flat=True).distinct()[:8]  # Máximo 8 resultados únicos
 
     results = []
-    for product in products:
+    for name in product_names:
         results.append({
-            'id': product.id,
-            'name': product.name,
-            'price': float(product.discounted_price),
-            'category': product.category.name if product.category else 'Sin categoría',
-            'pharmacy': product.pharmacy.pharmacy_name,
-            'image_url': product.main_image.url if product.main_image else None,
+            'name': name,
         })
 
     return JsonResponse({'results': results})
