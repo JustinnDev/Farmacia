@@ -992,8 +992,6 @@ footer {
     box-shadow: var(--shadow-xl);
     z-index: 1070;
     border: 1px solid var(--canva-gray-300);
-    max-height: 400px;
-    overflow-y: auto;
     transition: all 0.2s ease-in-out;
 }
 
