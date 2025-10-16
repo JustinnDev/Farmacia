@@ -4,9 +4,185 @@
     {% if category %}Productos - {{ category.name }}{% elif search_query %}Resultados de búsqueda{% else %}Productos{% endif %} - FarmaYa
 {% endblock %}
 
+{% block extra_js %}
+<script>
+let debounceTimer;
+const searchInput = document.getElementById('searchInput');
+const autocompleteResults = document.getElementById('autocompleteResults');
+
+// Función debounce para limitar las peticiones
+function debounce(func, wait) {
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(debounceTimer);
+            func(...args);
+        };
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(later, wait);
+    };
+}
+
+// Función para buscar sugerencias
+async function searchProducts(query) {
+    if (query.length < 2) {
+        // Agregar animación de contracción
+        autocompleteResults.classList.remove('show');
+        autocompleteResults.classList.add('hide');
+        setTimeout(() => {
+            autocompleteResults.style.display = '';
+        }, 200);
+        return;
+    }
+
+    try {
+        const response = await fetch(`/products/autocomplete/?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        if (data.results && data.results.length > 0) {
+            displayResults(data.results);
+        } else {
+            // Agregar animación de contracción
+            autocompleteResults.classList.remove('show');
+            autocompleteResults.classList.add('hide');
+            setTimeout(() => {
+                autocompleteResults.style.display = '';
+            }, 200);
+        }
+    } catch (error) {
+        console.error('Error fetching autocomplete results:', error);
+        // Agregar animación de contracción
+        autocompleteResults.classList.remove('show');
+        autocompleteResults.classList.add('hide');
+        setTimeout(() => {
+            autocompleteResults.style.display = '';
+        }, 200);
+    }
+}
+
+// Función para mostrar resultados
+function displayResults(results) {
+    autocompleteResults.innerHTML = '';
+
+    results.forEach(product => {
+        const item = document.createElement('div');
+        item.className = 'autocomplete-item p-2 border-bottom cursor-pointer';
+        item.onclick = () => {
+            window.location.href = `/products/${product.id}/`;
+        };
+
+        item.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 me-2">
+                    ${product.image_url ?
+                        `<img src="${product.image_url}" alt="${product.name}" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">` :
+                        `<div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fas fa-pills text-muted"></i>
+                        </div>`
+                    }
+                </div>
+                <div class="flex-grow-1">
+                    <div class="fw-bold text-truncate">${product.name}</div>
+                    <small class="text-muted">${product.category} • ${product.pharmacy}</small>
+                </div>
+                <div class="flex-shrink-0 text-end">
+                    <div class="fw-bold text-success">${product.price.toFixed(2)} USD</div>
+                </div>
+            </div>
+        `;
+
+        autocompleteResults.appendChild(item);
+    });
+
+    // Agregar animación de expansión
+    autocompleteResults.classList.remove('hide');
+    autocompleteResults.classList.add('show');
+    autocompleteResults.style.display = 'block';
+}
+
+// Event listener con debounce
+searchInput.addEventListener('input', debounce(function(e) {
+    const query = e.target.value.trim();
+    searchProducts(query);
+}, 300));
+
+// Ocultar resultados al hacer click fuera
+document.addEventListener('click', function(e) {
+    if (!searchInput.contains(e.target) && !autocompleteResults.contains(e.target)) {
+        // Agregar animación de contracción
+        autocompleteResults.classList.remove('show');
+        autocompleteResults.classList.add('hide');
+        setTimeout(() => {
+            autocompleteResults.style.display = '';
+        }, 200);
+    }
+});
+
+// Ocultar resultados al presionar Escape
+searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        // Agregar animación de contracción
+        autocompleteResults.classList.remove('show');
+        autocompleteResults.classList.add('hide');
+        setTimeout(() => {
+            autocompleteResults.style.display = '';
+        }, 200);
+    }
+});
+</script>
+{% endblock %}
+
 {% block content %}
+<!-- Barra de búsqueda global arriba -->
+<div class="container-fluid mb-4" style="position: relative;">
+    <!-- Contenedor de sugerencias FUERA del row para evitar cortes -->
+    <div id="autocompleteResults" class="autocomplete-results position-absolute w-100 bg-white border rounded shadow-lg"
+         style="top: 100%; left: 50%; transform: translateX(-50%); z-index: 1070; display: none; margin-top: 2px; max-width: 800px;">
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-body py-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="position-relative">
+                                <form method="get" action="{% url 'products:product_search' %}">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control form-control-lg border-0 shadow-none"
+                                               id="searchInput" name="q"
+                                               placeholder="Buscar productos por nombre, marca o descripción..."
+                                               value="{{ search_query }}" autocomplete="off"
+                                               style="font-size: 1.1rem; padding: 1rem 1.5rem;">
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-lg dropdown-toggle px-4" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-sort me-2"></i> Ordenar
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item py-2" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=name">
+                                        <i class="fas fa-sort-alpha-down me-2"></i>Nombre</a></li>
+                                    <li><a class="dropdown-item py-2" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=price_low">
+                                        <i class="fas fa-sort-numeric-down me-2"></i>Precio: Menor a Mayor</a></li>
+                                    <li><a class="dropdown-item py-2" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=price_high">
+                                        <i class="fas fa-sort-numeric-up me-2"></i>Precio: Mayor a Mayor</a></li>
+                                    <li><a class="dropdown-item py-2" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=rating">
+                                        <i class="fas fa-star me-2"></i>Calificación</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
-    <div class="col-md-3">
+    <div class="col-md-3" style="position: relative;">
         <!-- Sidebar con filtros -->
         <div class="card mb-4">
             <div class="card-header">
@@ -28,24 +204,6 @@
                         </li>
                     {% endfor %}
                 </ul>
-            </div>
-        </div>
-
-        <!-- Filtros de búsqueda -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Buscar Productos</h5>
-            </div>
-            <div class="card-body">
-                <form method="get" action="{% url 'products:product_search' %}">
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="q" placeholder="Buscar productos..."
-                               value="{{ search_query }}">
-                        <button class="btn btn-outline-primary" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
@@ -83,19 +241,7 @@
                     </a>
                 {% endif %}
             {% endif %}
-
-                <div class="dropdown w-100 w-sm-auto">
-                    <button class="btn btn-outline-secondary dropdown-toggle w-100 w-sm-auto" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-sort me-1"></i> Ordenar
-                    </button>
-                    <ul class="dropdown-menu w-100">
-                        <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=name">Nombre</a></li>
-                        <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=price_low">Precio: Menor a Mayor</a></li>
-                        <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=price_high">Precio: Mayor a Menor</a></li>
-                        <li><a class="dropdown-item" href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=rating">Calificación</a></li>
-                    </ul>
-                </div>
-            </div>
+        </div>
         </div>
 
         <!-- Lista de productos -->

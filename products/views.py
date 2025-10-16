@@ -4,6 +4,9 @@ from django.contrib import messages
 from django.forms import inlineformset_factory
 from django.db.models import Q
 from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.views.decorators.cache import cache_page
+from django.views.decorators.http import require_GET
 from .models import Product, Category
 from .forms import ProductForm, ProductVariantFormSet, ProductImageFormSet
 from users.models import PharmacyProfile
@@ -230,3 +233,34 @@ def pharmacy_products(request):
     }
 
     return render(request, 'products/pharmacy_products.html', context)
+
+
+@require_GET
+@cache_page(60 * 15)  # Cache por 15 minutos
+def autocomplete(request):
+    """Endpoint API para autocompletado de productos"""
+    query = request.GET.get('q', '').strip()
+
+    if len(query) < 2:
+        return JsonResponse({'results': []})
+
+    # Buscar productos que coincidan con la query
+    products = Product.objects.filter(
+        Q(is_active=True) &
+        (Q(name__icontains=query) |
+         Q(description__icontains=query) |
+         Q(brand__icontains=query))
+    ).select_related('category', 'pharmacy')[:10]  # Máximo 10 resultados
+
+    results = []
+    for product in products:
+        results.append({
+            'id': product.id,
+            'name': product.name,
+            'price': float(product.discounted_price),
+            'category': product.category.name if product.category else 'Sin categoría',
+            'pharmacy': product.pharmacy.pharmacy_name,
+            'image_url': product.main_image.url if product.main_image else None,
+        })
+
+    return JsonResponse({'results': results})

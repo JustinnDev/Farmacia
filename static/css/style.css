@@ -985,3 +985,56 @@ footer {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--canva-accent);
 }
+
+/* Estilos para autocompletado */
+.autocomplete-results {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xl);
+    z-index: 1070;
+    border: 1px solid var(--canva-gray-300);
+    max-height: 400px;
+    overflow-y: auto;
+    transition: all 0.2s ease-in-out;
+}
+
+.autocomplete-results.show {
+    max-height: 400px;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.autocomplete-results.hide {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-10px);
+    overflow: hidden;
+}
+
+.autocomplete-item {
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--canva-gray-200);
+}
+
+.autocomplete-item:hover {
+    background-color: var(--canva-gray-50);
+    transform: translateX(2px);
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.autocomplete-item .fw-bold {
+    color: var(--canva-primary);
+}
+
+.autocomplete-item small {
+    color: var(--canva-gray-600);
+}
+
+.autocomplete-item .text-success {
+    font-weight: 600;
+}
