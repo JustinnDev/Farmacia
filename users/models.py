@@ -45,6 +45,8 @@ class ClientProfile(models.Model):
     city = models.CharField(max_length=100, blank=True, verbose_name='Ciudad')
     state = models.CharField(max_length=100, blank=True, verbose_name='Estado')
     zip_code = models.CharField(max_length=10, blank=True, verbose_name='Código Postal')
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, verbose_name='Latitud')
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, verbose_name='Longitud')
     date_of_birth = models.DateField(null=True, blank=True, verbose_name='Fecha de Nacimiento')
 
     class Meta:

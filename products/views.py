@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.forms import inlineformset_factory
-from django.db.models import Q
+from django.db.models import Q, F
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.views.decorators.cache import cache_page
@@ -11,6 +11,7 @@ from .models import Product, Category
 from .forms import ProductForm, ProductVariantFormSet, ProductImageFormSet
 from users.models import PharmacyProfile
 from users.decorators import pharmacy_required
+from users.utils import calculate_distance
 
 
 def product_list(request, category_slug=None):
@@ -18,8 +19,6 @@ def product_list(request, category_slug=None):
     category = None
     categories = Category.objects.all()
     products = Product.objects.filter(is_active=True, stock_quantity__gt=0)
-
-    print("-------------------------------------------")
 
     # Filtrar por categoría si se especifica
     if category_slug:
@@ -34,6 +33,33 @@ def product_list(request, category_slug=None):
             Q(description__icontains=search_query) |
             Q(brand__icontains=search_query)
         )
+
+    # Filtro por ubicación
+    user_lat = request.GET.get('lat')
+    user_lng = request.GET.get('lng')
+    max_distance = request.GET.get('distance', 10)  # Default 10km
+
+    print("-----------------")
+    print(max_distance)
+
+    if user_lat and user_lng:
+        try:
+            user_lat = float(user_lat)
+            user_lng = float(user_lng)
+            max_distance = float(max_distance)
+            print(f"user {user_lat} {user_lng}")
+
+            # Filter pharmacies within the specified distance
+            nearby_pharmacies = []
+            for pharmacy in PharmacyProfile.objects.filter(latitude__isnull=False, longitude__isnull=False):
+                distance = calculate_distance(user_lat, user_lng, pharmacy.latitude, pharmacy.longitude)
+                print(f"{pharmacy.pharmacy_name} : {distance}")
+                if distance <= max_distance:
+                    nearby_pharmacies.append(pharmacy.id)
+
+            products = products.filter(pharmacy_id__in=nearby_pharmacies)
+        except (ValueError, TypeError):
+            pass  # Ignore invalid coordinates
 
 
 
@@ -68,6 +94,9 @@ def product_list(request, category_slug=None):
         'sort_by': sort_by,
         'is_client': is_client,
         'is_pharmacy': is_pharmacy,
+        'user_lat': user_lat,
+        'user_lng': user_lng,
+        'max_distance': max_distance,
     }
     return render(request, 'products/product_list.html', context)
 

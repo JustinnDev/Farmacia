@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}
     {% if category %}Productos - {{ category.name }}{% elif search_query %}Resultados de búsqueda{% else %}Productos{% endif %} - FarmaYa
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/geolocation.js' %}"></script>
 <script>
 let debounceTimer;
 const searchInput = document.getElementById('searchInput');
@@ -128,6 +130,73 @@ searchInput.addEventListener('keydown', function(e) {
         }, 200);
     }
 });
+
+// Location-based filtering
+let userLocation = null;
+const locationButton = document.getElementById('locationButton');
+const locationStatus = document.getElementById('locationStatus');
+const distanceSlider = document.getElementById('distanceSlider');
+const distanceValue = document.getElementById('distanceValue');
+
+async function getUserLocation() {
+    try {
+        locationButton.disabled = true;
+        locationButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Obteniendo ubicación...';
+
+        userLocation = await geolocationManager.getCurrentPosition();
+
+        locationStatus.innerHTML = '<i class="fas fa-check-circle text-success"></i> Ubicación obtenida';
+        locationButton.innerHTML = '<i class="fas fa-map-marker-alt"></i> Cambiar ubicación';
+        locationButton.disabled = false;
+
+        // Apply location filter
+        applyLocationFilter();
+
+    } catch (error) {
+        console.error('Error getting location:', error);
+        locationStatus.innerHTML = '<i class="fas fa-exclamation-triangle text-warning"></i> ' + GeolocationManager.getErrorMessage(error);
+        locationButton.innerHTML = '<i class="fas fa-map-marker-alt"></i> Obtener ubicación';
+        locationButton.disabled = false;
+    }
+}
+
+function applyLocationFilter() {
+    if (!userLocation) return;
+
+    const url = new URL(window.location);
+    url.searchParams.set('lat', userLocation.latitude);
+    url.searchParams.set('lng', userLocation.longitude);
+    url.searchParams.set('distance', distanceSlider.value);
+
+    window.location.href = url.toString();
+}
+
+function clearLocationFilter() {
+    const url = new URL(window.location);
+    url.searchParams.delete('lat');
+    url.searchParams.delete('lng');
+    url.searchParams.delete('distance');
+
+    window.location.href = url.toString();
+}
+
+// Initialize location status and slider
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('lat') && urlParams.has('lng')) {
+        userLocation = {
+            latitude: parseFloat(urlParams.get('lat')),
+            longitude: parseFloat(urlParams.get('lng'))
+        };
+        locationStatus.innerHTML = '<i class="fas fa-check-circle text-success"></i> Filtro de ubicación activo';
+        locationButton.innerHTML = '<i class="fas fa-map-marker-alt"></i> Cambiar ubicación';
+    }
+
+    // Update distance value display when slider changes
+    distanceSlider.addEventListener('input', function() {
+        distanceValue.textContent = this.value;
+    });
+});
 </script>
 {% endblock %}
 
@@ -203,22 +272,52 @@ searchInput.addEventListener('keydown', function(e) {
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=name"
-                       class="btn btn-outline-secondary btn-sm {% if sort_by == 'name' %}active{% endif %}">
+                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if user_lat %}lat={{ user_lat }}&lng={{ user_lng }}&distance={{ max_distance }}&{% endif %}sort=name"
+                        class="btn btn-outline-secondary btn-sm {% if sort_by == 'name' %}active{% endif %}">
                         <i class="fas fa-sort-alpha-down me-2"></i>Nombre
                     </a>
-                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=price_low"
-                       class="btn btn-outline-secondary btn-sm {% if sort_by == 'price_low' %}active{% endif %}">
+                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if user_lat %}lat={{ user_lat }}&lng={{ user_lng }}&distance={{ max_distance }}&{% endif %}sort=price_low"
+                        class="btn btn-outline-secondary btn-sm {% if sort_by == 'price_low' %}active{% endif %}">
                         <i class="fas fa-sort-numeric-down me-2"></i>Precio: Menor a Mayor
                     </a>
-                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=price_high"
-                       class="btn btn-outline-secondary btn-sm {% if sort_by == 'price_high' %}active{% endif %}">
+                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if user_lat %}lat={{ user_lat }}&lng={{ user_lng }}&distance={{ max_distance }}&{% endif %}sort=price_high"
+                        class="btn btn-outline-secondary btn-sm {% if sort_by == 'price_high' %}active{% endif %}">
                         <i class="fas fa-sort-numeric-up me-2"></i>Precio: Mayor a Mayor
                     </a>
-                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}sort=rating"
-                       class="btn btn-outline-secondary btn-sm {% if sort_by == 'rating' %}active{% endif %}">
+                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if user_lat %}lat={{ user_lat }}&lng={{ user_lng }}&distance={{ max_distance }}&{% endif %}sort=rating"
+                        class="btn btn-outline-secondary btn-sm {% if sort_by == 'rating' %}active{% endif %}">
                         <i class="fas fa-star me-2"></i>Calificación
                     </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtro por ubicación -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Buscar por Ubicación</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="distanceSlider" class="form-label">Distancia máxima: <span id="distanceValue">{{ max_distance|default:'10' }}</span> km</label>
+                    <input type="range" class="form-range" id="distanceSlider" min="1" max="20" value="{{ max_distance|default:'10' }}" step="1">
+                </div>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary" id="locationButton" onclick="getUserLocation()">
+                        <i class="fas fa-map-marker-alt"></i> Obtener ubicación
+                    </button>
+                    {% if user_lat %}
+                    <button type="button" class="btn btn-outline-secondary" onclick="clearLocationFilter()">
+                        <i class="fas fa-times"></i> Limpiar filtro
+                    </button>
+                    {% endif %}
+                </div>
+                <div id="locationStatus" class="mt-2 small text-muted">
+                    {% if user_lat %}
+                        <i class="fas fa-check-circle text-success"></i> Mostrando productos dentro de {{ max_distance|default:'10' }} km
+                    {% else %}
+                        Haz clic para filtrar productos por tu ubicación
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -314,7 +413,7 @@ searchInput.addEventListener('keydown', function(e) {
                     <ul class="pagination justify-content-center">
                         {% if page_obj.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}{% if user_lat %}&lat={{ user_lat }}&lng={{ user_lng }}&distance={{ max_distance }}{% endif %}">
                                     Anterior
                                 </a>
                             </li>
@@ -325,7 +424,7 @@ searchInput.addEventListener('keydown', function(e) {
                                 <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                             {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                                    <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}{% if user_lat %}&lat={{ user_lat }}&lng={{ user_lng }}&distance={{ max_distance }}{% endif %}">
                                         {{ num }}
                                     </a>
                                 </li>
@@ -334,7 +433,7 @@ searchInput.addEventListener('keydown', function(e) {
 
                         {% if page_obj.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}{% if user_lat %}&lat={{ user_lat }}&lng={{ user_lng }}&distance={{ max_distance }}{% endif %}">
                                     Siguiente
                                 </a>
                             </li>
