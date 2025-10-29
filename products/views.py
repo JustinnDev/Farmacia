@@ -17,7 +17,7 @@ def product_list(request, category_slug=None):
     """Vista de lista de productos con filtros opcionales"""
     category = None
     categories = Category.objects.all()
-    products = Product.objects.filter(is_active=True)
+    products = Product.objects.filter(is_active=True, stock_quantity__gt=0)
 
     print("-------------------------------------------")
 
@@ -76,7 +76,7 @@ def product_search(request):
     """Vista de búsqueda de productos"""
     query = request.GET.get('q', '')
     categories = Category.objects.all()
-    products = Product.objects.filter(is_active=True)
+    products = Product.objects.filter(is_active=True, stock_quantity__gt=0)
 
     if query:
         products = products.filter(
@@ -126,7 +126,7 @@ def product_detail(request, product_id):
     # Productos relacionados (misma categoría o misma farmacia)
     related_products = Product.objects.filter(
         Q(category=product.category) | Q(pharmacy=product.pharmacy)
-    ).exclude(id=product.id).filter(is_active=True)[:4]
+    ).exclude(id=product.id).filter(is_active=True, stock_quantity__gt=0)[:4]
 
     context = {
         'product': product,
@@ -270,6 +270,7 @@ def autocomplete(request):
     # Buscar nombres de productos únicos que coincidan con la query
     product_names = Product.objects.filter(
         Q(is_active=True) &
+        Q(stock_quantity__gt=0) &
         Q(name__icontains=query)
     ).values_list('name', flat=True).distinct()[:8]  # Máximo 8 resultados únicos
 
