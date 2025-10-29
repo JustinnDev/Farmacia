@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
-from .models import Order, OrderItem, Payment, Delivery, Review
+from .models import MasterOrder, Order, OrderItem, Payment, Delivery, Review
 from .forms import OrderForm, PaymentForm, ReviewForm
 from .cart import Cart
 from products.models import Product
@@ -62,39 +62,65 @@ def checkout(request):
     if request.method == 'POST':
         form = OrderForm(request.POST)
         if form.is_valid():
-            # Crear la orden
-            order = Order.objects.create(
+            # Crear orden maestra
+            master_order = MasterOrder.objects.create(
                 client=client_profile,
-                pharmacy=cart.get_pharmacy(),  # Método del carrito para obtener farmacia
-                subtotal=cart.get_total_price(),
-                total=cart.get_total_price(),  # Por ahora sin delivery fee
-                delivery_type=form.cleaned_data['delivery_type'],
-                delivery_address=form.cleaned_data['delivery_address'],
-                delivery_instructions=form.cleaned_data.get('delivery_instructions', ''),
-                payment_deadline=timezone.now() + timedelta(hours=24),  # 24 horas para pagar
+                total_amount=cart.get_total_price(),
             )
 
-            # Crear items de la orden
-            for item in cart:
-                OrderItem.objects.create(
-                    order=order,
-                    product=item['product'],
-                    quantity=item['quantity'],
-                    unit_price=item['price'],
-                    total_price=item['total_price'],
+            # Agrupar productos por farmacia
+            pharmacies = cart.get_pharmacies()
+
+            for pharmacy_id, items in pharmacies.items():
+                from users.models import PharmacyProfile
+                pharmacy = PharmacyProfile.objects.get(id=pharmacy_id)
+
+                # Calcular subtotal para esta farmacia
+                subtotal = sum(Decimal(item['price']) * item['quantity'] for item in items)
+
+                # Crear sub-orden
+                sub_order = Order.objects.create(
+                    master_order=master_order,
+                    client=client_profile,
+                    pharmacy=pharmacy,
+                    subtotal=subtotal,
+                    total=subtotal,  # Sin delivery fee por ahora
+                    delivery_type=form.cleaned_data['delivery_type'],
+                    delivery_address=form.cleaned_data['delivery_address'],
+                    delivery_instructions=form.cleaned_data.get('delivery_instructions', ''),
+                    payment_deadline=timezone.now() + timedelta(hours=24),
                 )
+
+                # Crear items para esta sub-orden
+                for item in items:
+                    # Obtener el producto desde la base de datos usando el product_id
+                    product_id = item['product_id']
+                    product = Product.objects.get(id=product_id)
+
+                    # Calcular total_price si no existe
+                    unit_price = Decimal(item['price'])
+                    quantity = item['quantity']
+                    total_price = unit_price * quantity
+
+                    OrderItem.objects.create(
+                        order=sub_order,
+                        product=product,
+                        quantity=quantity,
+                        unit_price=unit_price,
+                        total_price=total_price,
+                    )
 
             # Limpiar carrito
             cart.clear()
 
-            messages.success(request, f'Orden #{order.order_number} creada exitosamente.')
-            return redirect('orders:payment', order_id=order.id)
+            messages.success(request, f'Orden #{master_order.master_order_number} creada exitosamente.')
+            return redirect('orders:master_order_detail', master_order_id=master_order.id)
     else:
         form = OrderForm()
 
     # Variables calculadas para el template
     cart_total = cart.get_total_price()
-    pharmacy_info = cart.get_pharmacy()
+    pharmacy_info = cart.get_pharmacies()  # Mostrar todas las farmacias
 
     return render(request, 'orders/checkout.html', {
         'cart': cart,
@@ -108,7 +134,11 @@ def checkout(request):
 @login_required
 def payment(request, order_id):
     """Vista de pago de orden"""
-    order = get_object_or_404(Order, id=order_id, client__user=request.user)
+    order = get_object_or_404(Order, id=order_id)
+    # Permitir pago si es cliente de la orden maestra o farmacia de la sub-orden
+    if not (order.client.user == request.user or order.pharmacy.user == request.user):
+        from django.http import Http404
+        raise Http404("No tienes permiso para ver esta orden")
 
     if request.method == 'POST':
         form = PaymentForm(request.POST)
@@ -137,8 +167,22 @@ def payment(request, order_id):
                 order.order_status = 'paid'
                 order.save()
 
+                # Si es una sub-orden, actualizar el estado de pago de la orden maestra
+                if order.master_order:
+                    # Verificar si todas las sub-órdenes están pagadas
+                    all_sub_orders_paid = all(
+                        sub_order.payment_status == 'completed'
+                        for sub_order in order.master_order.sub_orders.all()
+                    )
+                    if all_sub_orders_paid:
+                        order.master_order.payment_status = 'completed'
+                        order.master_order.save()
+
                 messages.success(request, 'Pago procesado exitosamente.')
-                return redirect('orders:order_detail', order_id=order.id)
+                if order.master_order:
+                    return redirect('orders:master_order_detail', master_order_id=order.master_order.id)
+                else:
+                    return redirect('orders:order_detail', order_id=order.id)
             else:
                 messages.info(request, 'Pago pendiente de verificación.')
                 return redirect('orders:order_detail', order_id=order.id)
@@ -188,15 +232,36 @@ def order_detail(request, order_id):
 
 
 @login_required
+def master_order_list(request):
+    """Lista de órdenes maestras del cliente"""
+    client_profile = get_object_or_404(ClientProfile, user=request.user)
+    master_orders = MasterOrder.objects.filter(client=client_profile).order_by('-created_at')
+
+    return render(request, 'orders/master_order_list.html', {
+        'master_orders': master_orders,
+    })
+
+
+@login_required
+def master_order_detail(request, master_order_id):
+    """Vista detallada de una orden maestra"""
+    master_order = get_object_or_404(MasterOrder, id=master_order_id, client__user=request.user)
+    sub_orders = master_order.sub_orders.all().prefetch_related('items__product', 'pharmacy')
+
+    return render(request, 'orders/master_order_detail.html', {
+        'master_order': master_order,
+        'sub_orders': sub_orders,
+    })
+
+
+@login_required
 def order_list(request):
     """Lista de órdenes del usuario"""
     from users.models import PharmacyProfile
 
     if request.user.user_type == 'client':
-        client_profile = get_object_or_404(ClientProfile, user=request.user)
-        orders = Order.objects.filter(client=client_profile).order_by('-created_at')
-        is_client = True
-        is_pharmacy = False
+        # Para clientes, mostrar órdenes maestras
+        return master_order_list(request)
     else:
         # Para farmacias, mostrar órdenes de sus productos
         pharmacy_profile = get_object_or_404(PharmacyProfile, user=request.user)

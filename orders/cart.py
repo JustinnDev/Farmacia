@@ -61,16 +61,29 @@ class Cart:
         """Calcular precio total"""
         return sum(Decimal(item['price']) * item['quantity'] for item in self.cart.values())
 
-    def get_pharmacy(self):
-        """Obtener la farmacia del carrito (todos los productos deben ser de la misma farmacia)"""
+    def get_pharmacies(self):
+        """Obtener todas las farmacias en el carrito con sus productos"""
         if not self.cart:
-            return None
-        pharmacy_ids = set(item['pharmacy_id'] for item in self.cart.values())
-        if len(pharmacy_ids) != 1:
-            # Todos los productos deben ser de la misma farmacia
-            raise ValueError("Todos los productos deben ser de la misma farmacia")
-        from users.models import PharmacyProfile
-        return PharmacyProfile.objects.get(id=list(pharmacy_ids)[0])
+            return {}
+        pharmacy_items = {}
+        for product_id, item in self.cart.items():
+            pharmacy_id = item['pharmacy_id']
+            if pharmacy_id not in pharmacy_items:
+                pharmacy_items[pharmacy_id] = []
+            # Agregar el product_id al item para referencia
+            item_copy = item.copy()
+            item_copy['product_id'] = product_id
+            pharmacy_items[pharmacy_id].append(item_copy)
+        return pharmacy_items
+
+    def get_pharmacy(self):
+        """Obtener la farmacia del carrito (para compatibilidad con código existente)"""
+        pharmacies = self.get_pharmacies()
+        if len(pharmacies) == 1:
+            from users.models import PharmacyProfile
+            pharmacy_id = list(pharmacies.keys())[0]
+            return PharmacyProfile.objects.get(id=pharmacy_id)
+        return None
 
     def clear(self):
         """Limpiar el carrito"""

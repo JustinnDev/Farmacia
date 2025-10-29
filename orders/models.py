@@ -4,6 +4,38 @@ from users.models import CustomUser, PharmacyProfile, ClientProfile
 from products.models import Product, ProductVariant
 
 
+class MasterOrder(models.Model):
+    """Orden principal del cliente que agrupa sub-órdenes por farmacia"""
+    PAYMENT_STATUS_CHOICES = (
+        ('pending', 'Pendiente'),
+        ('processing', 'Procesando'),
+        ('completed', 'Completado'),
+        ('failed', 'Fallido'),
+        ('refunded', 'Reembolsado'),
+    )
+
+    client = models.ForeignKey(ClientProfile, on_delete=models.CASCADE, related_name='master_orders', verbose_name='Cliente')
+    master_order_number = models.CharField(max_length=20, unique=True, verbose_name='Número de Orden Maestra')
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Monto Total (USD)')
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending', verbose_name='Estado del Pago')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Creado el')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Actualizado el')
+
+    class Meta:
+        verbose_name = 'Orden Maestra'
+        verbose_name_plural = 'Órdenes Maestras'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Orden Maestra {self.master_order_number}"
+
+    def save(self, *args, **kwargs):
+        if not self.master_order_number:
+            import uuid
+            self.master_order_number = f"MORD-{uuid.uuid4().hex[:8].upper()}"
+        super().save(*args, **kwargs)
+
+
 class Order(models.Model):
     ORDER_STATUS_CHOICES = (
         ('pending', 'Pendiente'),
@@ -25,6 +57,7 @@ class Order(models.Model):
     )
 
     # Relationships
+    master_order = models.ForeignKey(MasterOrder, on_delete=models.CASCADE, related_name='sub_orders', null=True, blank=True, verbose_name='Orden Maestra')
     client = models.ForeignKey(ClientProfile, on_delete=models.CASCADE, related_name='orders', verbose_name='Cliente')
     pharmacy = models.ForeignKey(PharmacyProfile, on_delete=models.CASCADE, related_name='orders', verbose_name='Farmacia')
 

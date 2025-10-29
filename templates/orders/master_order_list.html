@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mis Órdenes{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Mis Órdenes</h1>
+
+    {% if master_orders %}
+        <div class="row">
+            {% for master_order in master_orders %}
+            <div class="col-md-12 mb-3">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Orden #{{ master_order.master_order_number }}</h5>
+                            <span class="badge bg-{{ master_order.payment_status|lower }}">{{ master_order.get_payment_status_display }}</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Fecha:</strong> {{ master_order.created_at|date:"d/m/Y H:i" }}</p>
+                                <p><strong>Total:</strong> ${{ master_order.total_amount }}</p>
+                                <p><strong>Número de Farmacias:</strong> {{ master_order.sub_orders.count }}</p>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <a href="{% url 'orders:master_order_detail' master_order.id %}" class="btn btn-primary">Ver Detalles</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <h4>No tienes órdenes aún</h4>
+            <p>¡Empieza a comprar productos de tus farmacias favoritas!</p>
+            <a href="{% url 'products:product_list' %}" class="btn btn-primary">Ver Productos</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

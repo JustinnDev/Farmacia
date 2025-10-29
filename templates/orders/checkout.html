@@ -110,38 +110,49 @@
             </div>
         </div>
 
-        <!-- Información de la farmacia -->
+        <!-- Información de las farmacias -->
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Farmacia</h5>
+                <h5 class="mb-0">Farmacias ({{ pharmacy_info|length }})</h5>
             </div>
             <div class="card-body">
-                <h6>{{ pharmacy_info.pharmacy_name }}</h6>
-                {% if pharmacy_info.is_verified %}
-                    <p class="mb-1">
-                        <i class="fas fa-check-circle text-success"></i>
-                        <small class="text-success">Farmacia Verificada</small>
-                    </p>
-                {% endif %}
+                {% for pharmacy_id, items in pharmacy_info.items %}
+                {% with pharmacy=items.0.product.pharmacy %}
+                <div class="mb-3 p-3 border rounded">
+                    <h6>{{ pharmacy.pharmacy_name }}</h6>
+                    {% if pharmacy.is_verified %}
+                        <p class="mb-1">
+                            <i class="fas fa-check-circle text-success"></i>
+                            <small class="text-success">Farmacia Verificada</small>
+                        </p>
+                    {% endif %}
 
-                {% if pharmacy_info.rating %}
-                    <div class="mb-2">
-                        {% for i in "12345"|make_list %}
-                            {% if forloop.counter <= pharmacy_info.rating %}
-                                <i class="fas fa-star text-warning"></i>
-                            {% else %}
-                                <i class="far fa-star text-warning"></i>
-                            {% endif %}
-                        {% endfor %}
-                        <small class="ms-1">{{ pharmacy_info.rating|floatformat:1 }}</small>
+                    {% if pharmacy.rating %}
+                        <div class="mb-2">
+                            {% for i in "12345"|make_list %}
+                                {% if forloop.counter <= pharmacy.rating %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% else %}
+                                    <i class="far fa-star text-warning"></i>
+                                {% endif %}
+                            {% endfor %}
+                            <small class="ms-1">{{ pharmacy.rating|floatformat:1 }}</small>
+                        </div>
+                    {% endif %}
+
+                    <p class="mb-1"><i class="fas fa-map-marker-alt"></i> {{ pharmacy.city }}, {{ pharmacy.state }}</p>
+
+                    {% if pharmacy.opening_time and pharmacy.closing_time %}
+                        <p class="mb-0"><i class="fas fa-clock"></i> {{ pharmacy.opening_time|time:"H:i" }} - {{ pharmacy.closing_time|time:"H:i" }}</p>
+                    {% endif %}
+
+                    <div class="mt-2">
+                        <small class="text-muted">{{ items|length }} producto{{ items|pluralize }}</small>
                     </div>
-                {% endif %}
-
-                <p class="mb-1"><i class="fas fa-map-marker-alt"></i> {{ pharmacy_info.city }}, {{ pharmacy_info.state }}</p>
-
-                {% if pharmacy_info.opening_time and pharmacy_info.closing_time %}
-                    <p class="mb-0"><i class="fas fa-clock"></i> {{ pharmacy_info.opening_time|time:"H:i" }} - {{ pharmacy_info.closing_time|time:"H:i" }}</p>
-                {% endif %}
+                </div>
+                {% if not forloop.last %}<hr>{% endif %}
+                {% endwith %}
+                {% endfor %}
             </div>
         </div>
     </div>
