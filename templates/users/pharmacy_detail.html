@@ -50,10 +50,19 @@
                         </div>
 
                         {% if pharmacy.website %}
-                            <p class="mb-0">
+                            <p class="mb-1">
                                 <i class="fas fa-globe"></i>
                                 <a href="{{ pharmacy.website }}" target="_blank" class="text-decoration-none">
                                     Sitio Web <i class="fas fa-external-link-alt ms-1"></i>
+                                </a>
+                            </p>
+                        {% endif %}
+
+                        {% if pharmacy.google_maps_link %}
+                            <p class="mb-0">
+                                <i class="fas fa-map-marked-alt"></i>
+                                <a href="{{ pharmacy.google_maps_link }}" target="_blank" class="text-decoration-none">
+                                    Ver en Google Maps <i class="fas fa-external-link-alt ms-1"></i>
                                 </a>
                             </p>
                         {% endif %}

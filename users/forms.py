@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from django.core.exceptions import ValidationError
 from .models import CustomUser, PharmacyProfile, ClientProfile
 
 
@@ -25,11 +26,18 @@ class UserRegistrationForm(UserCreationForm):
 
 
 class PharmacyProfileForm(forms.ModelForm):
+    def clean_google_maps_link(self):
+        google_maps_link = self.cleaned_data.get('google_maps_link')
+        if google_maps_link:
+            if not google_maps_link.startswith('https://www.google.com/maps/'):
+                raise ValidationError('El enlace debe ser una URL válida de Google Maps.')
+        return google_maps_link
+
     class Meta:
         model = PharmacyProfile
         fields = [
             'pharmacy_name', 'description', 'address', 'city', 'state', 'zip_code',
-            'latitude', 'longitude', 'opening_time', 'closing_time', 'website', 'email'
+            'latitude', 'longitude', 'google_maps_link', 'opening_time', 'closing_time', 'website', 'email'
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
