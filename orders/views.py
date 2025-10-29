@@ -369,4 +369,40 @@ def start_delivery(request, order_id):
 
         messages.success(request, f'Entrega iniciada vía {delivery.get_delivery_type_display()}')
 
+@login_required
+def review_order(request, order_id):
+    """Vista para que clientes dejen reseñas de órdenes entregadas"""
+    order = get_object_or_404(Order, id=order_id, client__user=request.user)
+
+    # Solo permitir reseñas si la orden está entregada y no tiene reseña previa
+    if order.order_status != 'delivered':
+        messages.error(request, 'Solo puedes reseñar órdenes entregadas.')
+        return redirect('orders:order_detail', order_id=order.id)
+
+    if hasattr(order, 'review'):
+        messages.warning(request, 'Ya has dejado una reseña para esta orden.')
+        return redirect('orders:order_detail', order_id=order.id)
+
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.order = order
+            review.client = order.client
+            review.pharmacy = order.pharmacy
+            review.save()
+
+            # Actualizar rating de la farmacia
+            pharmacy = order.pharmacy
+            pharmacy.update_rating()
+
+            messages.success(request, '¡Gracias por tu reseña!')
+            return redirect('orders:order_detail', order_id=order.id)
+    else:
+        form = ReviewForm()
+
+    return render(request, 'orders/review_form.html', {
+        'form': form,
+        'order': order,
+    })
     return redirect('orders:order_detail', order_id=order.id)
