@@ -14,6 +14,70 @@ from users.decorators import pharmacy_required
 from users.utils import calculate_distance
 
 
+def apply_search_filter(products, request):
+    """Aplica filtro de búsqueda de texto a un queryset de productos"""
+    search_query = request.GET.get('q')
+    if search_query:
+        products = products.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(brand__icontains=search_query)
+        )
+    return products, search_query
+
+
+def apply_location_filter(products, request):
+    """Aplica filtro de ubicación a un queryset de productos"""
+    user_lat = request.GET.get('lat')
+    user_lng = request.GET.get('lng')
+    max_distance = request.GET.get('distance', 10)  # Default 10km
+
+    if user_lat and user_lng:
+        try:
+            user_lat = float(user_lat)
+            user_lng = float(user_lng)
+            max_distance = float(max_distance)
+
+            # Filter pharmacies within the specified distance
+            nearby_pharmacies = []
+            for pharmacy in PharmacyProfile.objects.filter(latitude__isnull=False, longitude__isnull=False):
+                distance = calculate_distance(user_lat, user_lng, pharmacy.latitude, pharmacy.longitude)
+                if distance <= max_distance:
+                    nearby_pharmacies.append(pharmacy.id)
+
+            products = products.filter(pharmacy_id__in=nearby_pharmacies)
+        except (ValueError, TypeError):
+            pass  # Ignore invalid coordinates
+
+    return products, user_lat, user_lng, max_distance
+
+
+def apply_sorting(products, request):
+    """Aplica ordenamiento a un queryset de productos"""
+    sort_by = request.GET.get('sort', 'name')
+
+    if sort_by == 'price_low':
+        products = products.order_by('price')
+    elif sort_by == 'price_high':
+        products = products.order_by('-price')
+    elif sort_by == 'rating':
+        products = products.order_by('-pharmacy__rating')
+    else:
+        products = products.order_by('name')
+
+    return products, sort_by
+
+
+def get_common_context(request):
+    """Retorna variables comunes del contexto para las vistas de productos"""
+    is_client = request.user.is_authenticated and request.user.user_type == 'client'
+    is_pharmacy = request.user.is_authenticated and request.user.user_type == 'pharmacy'
+    return {
+        'is_client': is_client,
+        'is_pharmacy': is_pharmacy,
+    }
+
+
 def product_list(request, category_slug=None):
     """Vista de lista de productos con filtros opcionales"""
     category = None
@@ -25,57 +89,10 @@ def product_list(request, category_slug=None):
         category = get_object_or_404(Category, slug=category_slug)
         products = products.filter(category=category)
 
-    # Filtros adicionales
-    search_query = request.GET.get('q')
-    if search_query:
-        products = products.filter(
-            Q(name__icontains=search_query) |
-            Q(description__icontains=search_query) |
-            Q(brand__icontains=search_query)
-        )
-
-    # Filtro por ubicación
-    user_lat = request.GET.get('lat')
-    user_lng = request.GET.get('lng')
-    max_distance = request.GET.get('distance', 10)  # Default 10km
-
-    print("-----------------")
-    print(max_distance)
-
-    if user_lat and user_lng:
-        try:
-            user_lat = float(user_lat)
-            user_lng = float(user_lng)
-            max_distance = float(max_distance)
-            print(f"user {user_lat} {user_lng}")
-
-            # Filter pharmacies within the specified distance
-            nearby_pharmacies = []
-            for pharmacy in PharmacyProfile.objects.filter(latitude__isnull=False, longitude__isnull=False):
-                distance = calculate_distance(user_lat, user_lng, pharmacy.latitude, pharmacy.longitude)
-                print(f"{pharmacy.pharmacy_name} : {distance}")
-                if distance <= max_distance:
-                    nearby_pharmacies.append(pharmacy.id)
-
-            products = products.filter(pharmacy_id__in=nearby_pharmacies)
-        except (ValueError, TypeError):
-            pass  # Ignore invalid coordinates
-
-
-
-    # Ordenamiento
-    sort_by = request.GET.get('sort', 'name')
-
-    print(sort_by)
-
-    if sort_by == 'price_low':
-        products = products.order_by('price')
-    elif sort_by == 'price_high':
-        products = products.order_by('-price')
-    elif sort_by == 'rating':
-        products = products.order_by('-pharmacy__rating')
-    else:
-        products = products.order_by('name')
+    # Aplicar filtros usando las funciones helper
+    products, search_query = apply_search_filter(products, request)
+    products, user_lat, user_lng, max_distance = apply_location_filter(products, request)
+    products, sort_by = apply_sorting(products, request)
 
     # Paginación
     paginator = Paginator(products, 12)  # 12 productos por página
@@ -83,21 +100,17 @@ def product_list(request, category_slug=None):
     page_obj = paginator.get_page(page_number)
 
     # Variables calculadas para el template
-    is_client = request.user.is_authenticated and request.user.user_type == 'client'
-    is_pharmacy = request.user.is_authenticated and request.user.user_type == 'pharmacy'
-
-    context = {
+    context = get_common_context(request)
+    context.update({
         'category': category,
         'categories': categories,
         'page_obj': page_obj,
         'search_query': search_query,
         'sort_by': sort_by,
-        'is_client': is_client,
-        'is_pharmacy': is_pharmacy,
         'user_lat': user_lat,
         'user_lng': user_lng,
         'max_distance': max_distance,
-    }
+    })
     return render(request, 'products/product_list.html', context)
 
 
@@ -107,6 +120,7 @@ def product_search(request):
     categories = Category.objects.all()
     products = Product.objects.filter(is_active=True, stock_quantity__gt=0)
 
+    # Aplicar búsqueda (con query adicional para farmacias)
     if query:
         products = products.filter(
             Q(name__icontains=query) |
@@ -115,16 +129,9 @@ def product_search(request):
             Q(pharmacy__pharmacy_name__icontains=query)
         )
 
-    # Ordenamiento
-    sort_by = request.GET.get('sort', 'name')
-    if sort_by == 'price_low':
-        products = products.order_by('price')
-    elif sort_by == 'price_high':
-        products = products.order_by('-price')
-    elif sort_by == 'rating':
-        products = products.order_by('-pharmacy__rating')
-    else:
-        products = products.order_by('name')
+    # Aplicar filtros usando las funciones helper
+    products, user_lat, user_lng, max_distance = apply_location_filter(products, request)
+    products, sort_by = apply_sorting(products, request)
 
     # Paginación
     paginator = Paginator(products, 12)
@@ -132,19 +139,18 @@ def product_search(request):
     page_obj = paginator.get_page(page_number)
 
     # Variables calculadas para el template
-    is_client = request.user.is_authenticated and request.user.user_type == 'client'
-    is_pharmacy = request.user.is_authenticated and request.user.user_type == 'pharmacy'
-
-    context = {
+    context = get_common_context(request)
+    context.update({
         'page_obj': page_obj,
         'query': query,
         'search_query': query,  # Para mantener consistencia con product_list
         'search_results': True,
         'categories': categories,
         'sort_by': sort_by,
-        'is_client': is_client,
-        'is_pharmacy': is_pharmacy,
-    }
+        'user_lat': user_lat,
+        'user_lng': user_lng,
+        'max_distance': max_distance,
+    })
     return render(request, 'products/product_list.html', context)
 
 
