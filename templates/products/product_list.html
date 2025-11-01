@@ -220,6 +220,12 @@ document.addEventListener('DOMContentLoaded', function() {
         locationButton.innerHTML = '<i class="fas fa-map-marker-alt"></i> Cambiar ubicación';
     }
 
+    // Set slider value from URL parameter or session
+    if (urlParams.has('distance')) {
+        distanceSlider.value = urlParams.get('distance');
+        distanceValue.textContent = urlParams.get('distance');
+    }
+
     // Update distance value display when slider changes
     distanceSlider.addEventListener('input', function() {
         distanceValue.textContent = this.value;
