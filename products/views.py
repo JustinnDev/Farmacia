@@ -16,21 +16,22 @@ from users.utils import calculate_distance
 
 def apply_search_filter(products, request):
     """Aplica filtro de búsqueda de texto a un queryset de productos"""
-    search_query = request.GET.get('q')
+    search_query = request.GET.get('q', '')
     if search_query:
         products = products.filter(
             Q(name__icontains=search_query) |
             Q(description__icontains=search_query) |
-            Q(brand__icontains=search_query)
+            Q(brand__icontains=search_query) |
+            Q(pharmacy__pharmacy_name__icontains=search_query)
         )
     return products, search_query
 
 
 def apply_location_filter(products, request):
     """Aplica filtro de ubicación a un queryset de productos"""
-    user_lat = request.GET.get('lat')
-    user_lng = request.GET.get('lng')
-    max_distance = request.GET.get('distance', 10)  # Default 10km
+    user_lat = request.GET.get('lat') or request.session.get('user_lat')
+    user_lng = request.GET.get('lng') or request.session.get('user_lng')
+    max_distance = request.GET.get('distance') or request.session.get('max_distance', 10)  # Default 10km
 
     if user_lat and user_lng:
         try:
@@ -49,12 +50,15 @@ def apply_location_filter(products, request):
         except (ValueError, TypeError):
             pass  # Ignore invalid coordinates
 
+    request.session['user_lat'] = user_lat
+    request.session['user_lng'] = user_lng
+    request.session['max_distance'] = max_distance
     return products, user_lat, user_lng, max_distance
 
 
 def apply_sorting(products, request):
     """Aplica ordenamiento a un queryset de productos"""
-    sort_by = request.GET.get('sort', 'name')
+    sort_by = request.GET.get('sort') or request.session.get('sort_by', 'name')
 
     if sort_by == 'price_low':
         products = products.order_by('price')
@@ -65,6 +69,7 @@ def apply_sorting(products, request):
     else:
         products = products.order_by('name')
 
+    request.session['sort_by'] = sort_by
     return products, sort_by
 
 
@@ -89,7 +94,7 @@ def product_list(request, category_slug=None):
         category = get_object_or_404(Category, slug=category_slug)
         products = products.filter(category=category)
 
-    # Aplicar filtros usando las funciones helper
+    # Aplicar filtros usando las funciones helper (siempre aplicados juntos)
     products, search_query = apply_search_filter(products, request)
     products, user_lat, user_lng, max_distance = apply_location_filter(products, request)
     products, sort_by = apply_sorting(products, request)
@@ -120,16 +125,10 @@ def product_search(request):
     categories = Category.objects.all()
     products = Product.objects.filter(is_active=True, stock_quantity__gt=0)
 
-    # Aplicar búsqueda (con query adicional para farmacias)
-    if query:
-        products = products.filter(
-            Q(name__icontains=query) |
-            Q(description__icontains=query) |
-            Q(brand__icontains=query) |
-            Q(pharmacy__pharmacy_name__icontains=query)
-        )
+    # Aplicar búsqueda (con query adicional para farmacias) - ahora usa la función helper
+    products, search_query = apply_search_filter(products, request)
 
-    # Aplicar filtros usando las funciones helper
+    # Aplicar filtros usando las funciones helper (siempre aplicados juntos)
     products, user_lat, user_lng, max_distance = apply_location_filter(products, request)
     products, sort_by = apply_sorting(products, request)
 
@@ -143,7 +142,7 @@ def product_search(request):
     context.update({
         'page_obj': page_obj,
         'query': query,
-        'search_query': query,  # Para mantener consistencia con product_list
+        'search_query': search_query,  # Para mantener consistencia con product_list
         'search_results': True,
         'categories': categories,
         'sort_by': sort_by,
