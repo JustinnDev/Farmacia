@@ -39,6 +39,9 @@ def apply_location_filter(products, request):
             user_lng = float(user_lng)
             max_distance = float(max_distance)
 
+            print("-------------")
+            print(f"{max_distance}")
+
             # Filter pharmacies within the specified distance
             nearby_pharmacies = []
             for pharmacy in PharmacyProfile.objects.filter(latitude__isnull=False, longitude__isnull=False):
