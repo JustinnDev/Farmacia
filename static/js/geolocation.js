@@ -14,8 +14,14 @@ class GeolocationManager {
                 return;
             }
 
+            // Set a fallback timeout for environments where geolocation might hang
+            const fallbackTimeout = setTimeout(() => {
+                reject(new Error('TIMEOUT'));
+            }, 15000); // 15 seconds fallback
+
             navigator.geolocation.getCurrentPosition(
                 (position) => {
+                    clearTimeout(fallbackTimeout);
                     this.userLocation = {
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude
@@ -23,6 +29,7 @@ class GeolocationManager {
                     resolve(this.userLocation);
                 },
                 (error) => {
+                    clearTimeout(fallbackTimeout);
                     reject(error);
                 },
                 {
@@ -83,6 +90,9 @@ class GeolocationManager {
 
     // Get user-friendly error message
     static getErrorMessage(error) {
+        if (error.message === 'TIMEOUT') {
+            return 'Se agotó el tiempo para obtener la ubicación';
+        }
         switch(error.code) {
             case error.PERMISSION_DENIED:
                 return 'El usuario negó el permiso de ubicación';
