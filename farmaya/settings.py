@@ -142,6 +142,14 @@ LOGIN_URL = 'users:login'
 
 # Charge CSS in PythonAnywhere
 
+import os
+import django
+
+css_admin_files =  os.path.join(django.__path__[0], 'contrib/admin/static')
+
+STATIC_ROOT = os.path.join(BASE_DIR , 'staticfiles')
+STATIC_URL = '/static/'
+
 if DEBUG:
     #STATICFILES_DIRS = [css_admin_files]
     STATICFILES_DIRS = [BASE_DIR/'static']
