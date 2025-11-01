@@ -1,8 +1,5 @@
 // Geolocation utilities for FarmaYa
 
-        console.log('[GeolocationManager] EXISTE');
-
-
 class GeolocationManager {
     constructor() {
         this.userLocation = null;
