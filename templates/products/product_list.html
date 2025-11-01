@@ -138,6 +138,22 @@ const locationStatus = document.getElementById('locationStatus');
 const distanceSlider = document.getElementById('distanceSlider');
 const distanceValue = document.getElementById('distanceValue');
 
+// Function to apply sorting with location filter
+function applySorting(sortValue) {
+    const url = new URL(window.location);
+    url.searchParams.set('sort', sortValue);
+
+    // If location is active, preserve it
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('lat') && urlParams.has('lng')) {
+        url.searchParams.set('lat', urlParams.get('lat'));
+        url.searchParams.set('lng', urlParams.get('lng'));
+        url.searchParams.set('distance', urlParams.get('distance') || '10');
+    }
+
+    window.location.href = url.toString();
+}
+
 async function getUserLocation() {
     try {
         locationButton.disabled = true;
@@ -168,6 +184,12 @@ function applyLocationFilter() {
     url.searchParams.set('lng', userLocation.longitude);
     url.searchParams.set('distance', distanceSlider.value);
 
+    // Preserve current sort parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('sort')) {
+        url.searchParams.set('sort', urlParams.get('sort'));
+    }
+
     window.location.href = url.toString();
 }
 
@@ -176,6 +198,12 @@ function clearLocationFilter() {
     url.searchParams.delete('lat');
     url.searchParams.delete('lng');
     url.searchParams.delete('distance');
+
+    // Preserve current sort parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('sort')) {
+        url.searchParams.set('sort', urlParams.get('sort'));
+    }
 
     window.location.href = url.toString();
 }
@@ -272,22 +300,22 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if user_lat %}lat={{ user_lat }}&lng={{ user_lng }}&distance={{ max_distance }}&{% endif %}sort=name"
+                    <button onclick="applySorting('name')"
                         class="btn btn-outline-secondary btn-sm {% if sort_by == 'name' %}active{% endif %}">
                         <i class="fas fa-sort-alpha-down me-2"></i>Nombre
-                    </a>
-                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if user_lat %}lat={{ user_lat }}&lng={{ user_lng }}&distance={{ max_distance }}&{% endif %}sort=price_low"
+                    </button>
+                    <button onclick="applySorting('price_low')"
                         class="btn btn-outline-secondary btn-sm {% if sort_by == 'price_low' %}active{% endif %}">
                         <i class="fas fa-sort-numeric-down me-2"></i>Precio: Menor a Mayor
-                    </a>
-                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if user_lat %}lat={{ user_lat }}&lng={{ user_lng }}&distance={{ max_distance }}&{% endif %}sort=price_high"
+                    </button>
+                    <button onclick="applySorting('price_high')"
                         class="btn btn-outline-secondary btn-sm {% if sort_by == 'price_high' %}active{% endif %}">
                         <i class="fas fa-sort-numeric-up me-2"></i>Precio: Mayor a Mayor
-                    </a>
-                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if user_lat %}lat={{ user_lat }}&lng={{ user_lng }}&distance={{ max_distance }}&{% endif %}sort=rating"
+                    </button>
+                    <button onclick="applySorting('rating')"
                         class="btn btn-outline-secondary btn-sm {% if sort_by == 'rating' %}active{% endif %}">
                         <i class="fas fa-star me-2"></i>Calificación
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
