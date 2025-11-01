@@ -170,7 +170,9 @@ async function getUserLocation() {
 
     } catch (error) {
         console.error('Error getting location:', error);
-        locationStatus.innerHTML = '<i class="fas fa-exclamation-triangle text-warning"></i> ' + GeolocationManager.getErrorMessage(error);
+        const errorMessage = GeolocationManager.getErrorMessage(error);
+        alert('Error al obtener la ubicación: ' + errorMessage);
+        locationStatus.innerHTML = '<i class="fas fa-exclamation-triangle text-warning"></i> ' + errorMessage;
         locationButton.innerHTML = '<i class="fas fa-map-marker-alt"></i> Obtener ubicación';
         locationButton.disabled = false;
     }
