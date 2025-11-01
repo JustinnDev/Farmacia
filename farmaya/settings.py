@@ -140,4 +140,12 @@ LOGIN_URL = 'users:login'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
+# Charge CSS in PythonAnywhere
+
+if DEBUG:
+    #STATICFILES_DIRS = [css_admin_files]
+    STATICFILES_DIRS = [BASE_DIR/'static']
+else:
+    STATICFILES_DIRS = []
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
