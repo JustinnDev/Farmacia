@@ -7,6 +7,8 @@
 
 {% block extra_js %}
 <script type="text/javascript"  src="{% static 'js/geolocation.js' %}"></script>
+<script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
 <script>
 let debounceTimer;
 const searchInput = document.getElementById('searchInput');
@@ -195,6 +197,13 @@ function applyLocationFilter() {
     window.location.href = url.toString();
 }
 
+// Override applyLocationFilter to update map after location change
+const originalApplyLocationFilter = applyLocationFilter;
+applyLocationFilter = function() {
+    originalApplyLocationFilter();
+    // Map will be updated when page reloads with new location
+};
+
 function clearLocationFilter() {
     const url = new URL(window.location);
     url.searchParams.delete('lat');
@@ -220,6 +229,9 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         locationStatus.innerHTML = '<i class="fas fa-check-circle text-success"></i> Filtro de ubicación activo';
         locationButton.innerHTML = '<i class="fas fa-map-marker-alt"></i> Cambiar ubicación';
+
+        // Initialize map if location is available
+        initializeMap();
     }
 
     // Set slider value from URL parameter or session
@@ -231,8 +243,198 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update distance value display when slider changes
     distanceSlider.addEventListener('input', function() {
         distanceValue.textContent = this.value;
+        // Update map circle when slider changes (if map exists)
+        if (map && userLocation) {
+            addSearchRadiusCircle();
+            loadNearbyPharmacies();
+        }
     });
 });
+
+// Map functionality
+let map = null;
+let userMarker = null;
+let pharmacyMarkers = [];
+let searchRadiusCircle = null;
+
+async function initializeMap() {
+    // Evitar inicializar múltiples veces
+    if (map) {
+        updateMap();
+        return;
+    }
+
+    if (!userLocation) return;
+
+    // Initialize mapbox
+    mapboxgl.accessToken = '{{ mapbox_api_key|default:"pk.eyJ1IjoibW9uZG9uZ29vbyIsImEiOiJjbWhoejl2ZnYwd215MmtwcXI4eWNhNjFnIn0.sGM6BT_g4MvtSlOlKitnLQ" }}';
+
+    map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [userLocation.longitude, userLocation.latitude],
+        zoom: 13
+    });
+
+    // Add navigation controls
+    map.addControl(new mapboxgl.NavigationControl());
+
+    // Esperar a que el mapa cargue antes de agregar elementos
+    map.on('load', function() {
+        // Add user location marker
+        userMarker = new mapboxgl.Marker({ color: '#007bff' })
+            .setLngLat([userLocation.longitude, userLocation.latitude])
+            .addTo(map);
+
+        // Load nearby pharmacies
+        loadNearbyPharmacies();
+
+        // Add search radius circle
+        addSearchRadiusCircle();
+    });
+}
+
+async function loadNearbyPharmacies() {
+    if (!userLocation) return;
+
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const distance = urlParams.get('distance') || '10';
+
+        const response = await fetch(`/products/nearby-pharmacies/?lat=${userLocation.latitude}&lng=${userLocation.longitude}&distance=${distance}`);
+        const data = await response.json();
+
+        if (data.pharmacies) {
+            displayPharmacies(data.pharmacies);
+        }
+    } catch (error) {
+        console.error('Error loading nearby pharmacies:', error);
+    }
+}
+
+function displayPharmacies(pharmacies) {
+    // Clear existing pharmacy markers
+    pharmacyMarkers.forEach(marker => marker.remove());
+    pharmacyMarkers = [];
+
+    pharmacies.forEach(pharmacy => {
+        // Create pharmacy marker
+        const marker = new mapboxgl.Marker({ color: '#28a745' })
+            .setLngLat([pharmacy.longitude, pharmacy.latitude])
+            .addTo(map);
+
+        // Create popup
+        const popup = new mapboxgl.Popup({ offset: 25 })
+            .setHTML(`
+                <div class="pharmacy-popup">
+                    <h6 class="mb-2">${pharmacy.name}</h6>
+                    <p class="mb-1"><i class="fas fa-map-marker-alt me-1"></i>${pharmacy.address}</p>
+                    <p class="mb-1"><i class="fas fa-route me-1"></i>${pharmacy.distance} km</p>
+                    ${pharmacy.rating > 0 ? `<p class="mb-1"><i class="fas fa-star text-warning me-1"></i>${pharmacy.rating.toFixed(1)}</p>` : ''}
+                    ${pharmacy.phone ? `<p class="mb-1"><i class="fas fa-phone me-1"></i>${pharmacy.phone}</p>` : ''}
+                    ${pharmacy.opening_time && pharmacy.closing_time ? `<p class="mb-1"><i class="fas fa-clock me-1"></i>${pharmacy.opening_time} - ${pharmacy.closing_time}</p>` : ''}
+                </div>
+            `);
+
+        marker.setPopup(popup);
+        pharmacyMarkers.push(marker);
+    });
+}
+
+function addSearchRadiusCircle() {
+    if (!map || !userLocation || !map.isStyleLoaded()) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const radiusKm = parseFloat(urlParams.get('distance') || '10');
+
+    // Convert km to meters for Mapbox
+    const radiusMeters = radiusKm * 1000;
+
+    // Create circle as a GeoJSON feature
+    const circleGeoJSON = createGeoJSONCircle([userLocation.longitude, userLocation.latitude], radiusMeters);
+
+    // Remove existing circle if it exists
+    if (map.getSource('search-radius')) {
+        map.removeLayer('search-radius');
+        map.removeLayer('search-radius-outline');
+        map.removeSource('search-radius');
+    }
+
+    // Add circle source and layer
+    map.addSource('search-radius', {
+        type: 'geojson',
+        data: circleGeoJSON
+    });
+
+    map.addLayer({
+        id: 'search-radius',
+        type: 'fill',
+        source: 'search-radius',
+        paint: {
+            'fill-color': '#007bff',
+            'fill-opacity': 0.1
+        }
+    });
+
+    map.addLayer({
+        id: 'search-radius-outline',
+        type: 'line',
+        source: 'search-radius',
+        paint: {
+            'line-color': '#007bff',
+            'line-width': 2,
+            'line-opacity': 0.5
+        }
+    });
+}
+
+function createGeoJSONCircle(center, radiusInMeters, points = 64) {
+    const coords = {
+        latitude: center[1],
+        longitude: center[0]
+    };
+
+    const km = radiusInMeters / 1000;
+    const ret = [];
+    const distanceX = km / (111.320 * Math.cos(coords.latitude * Math.PI / 180));
+    const distanceY = km / 110.574;
+
+    let theta, x, y;
+    for (let i = 0; i < points; i++) {
+        theta = (i / points) * (2 * Math.PI);
+        x = distanceX * Math.cos(theta);
+        y = distanceY * Math.sin(theta);
+
+        ret.push([coords.longitude + x, coords.latitude + y]);
+    }
+    ret.push(ret[0]);
+
+    return {
+        type: 'Feature',
+        geometry: {
+            type: 'Polygon',
+            coordinates: [ret]
+        }
+    };
+}
+
+// Update map when location filter changes
+function updateMap() {
+    if (map && userLocation) {
+        // Update user marker position
+        userMarker.setLngLat([userLocation.longitude, userLocation.latitude]);
+
+        // Center map on new location
+        map.setCenter([userLocation.longitude, userLocation.latitude]);
+
+        // Reload pharmacies and update circle
+        loadNearbyPharmacies();
+        addSearchRadiusCircle();
+    } else {
+        // Initialize map if it doesn't exist
+        initializeMap();
+    }
+}
 </script>
 {% endblock %}
 
@@ -274,6 +476,25 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 </div>
+
+<!-- Map Section -->
+{% if user_lat %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-map-marked-alt me-2"></i>
+                    Farmacias Cercanas (Radio: {{ max_distance|default:'10' }} km)
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div id="map" style="height: 400px; width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="row" style="position: relative; z-index: 1;">
     <div class="col-md-3" style="position: relative;">

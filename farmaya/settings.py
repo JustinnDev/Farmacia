@@ -70,6 +70,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'farmaya.context_processors.user_type',
                 'farmaya.context_processors.pharmacy_context',
+                'farmaya.context_processors.mapbox_api_key',
             ],
         },
     },
@@ -157,4 +158,7 @@ else:
     STATICFILES_DIRS = []
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Mapbox settings
+MAPBOX_API_KEY = os.getenv('MAP_BOX_API_KEY')
 

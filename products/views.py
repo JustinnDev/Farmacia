@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_GET
+from django.conf import settings
 from .models import Product, Category
 from .forms import ProductForm, ProductVariantFormSet, ProductImageFormSet
 from users.models import PharmacyProfile
@@ -318,3 +319,48 @@ def autocomplete(request):
         })
 
     return JsonResponse({'results': results})
+
+
+@require_GET
+def nearby_pharmacies(request):
+    """API endpoint to get nearby pharmacies for map display"""
+    user_lat = request.GET.get('lat')
+    user_lng = request.GET.get('lng')
+    max_distance = request.GET.get('distance', 10)
+
+    if not user_lat or not user_lng:
+        return JsonResponse({'error': 'Latitude and longitude are required'}, status=400)
+
+    try:
+        user_lat = float(user_lat)
+        user_lng = float(user_lng)
+        max_distance = float(max_distance)
+    except ValueError:
+        return JsonResponse({'error': 'Invalid coordinates or distance'}, status=400)
+
+    # Get nearby pharmacies
+    nearby_pharmacies = []
+    for pharmacy in PharmacyProfile.objects.filter(latitude__isnull=False, longitude__isnull=False):
+        distance = calculate_distance(user_lat, user_lng, pharmacy.latitude, pharmacy.longitude)
+        if distance <= max_distance:
+            nearby_pharmacies.append({
+                'id': pharmacy.id,
+                'name': pharmacy.pharmacy_name,
+                'address': pharmacy.address,
+                'latitude': float(pharmacy.latitude),
+                'longitude': float(pharmacy.longitude),
+                'rating': float(pharmacy.rating) if pharmacy.rating else 0,
+                'distance': round(distance, 2),
+                'phone': pharmacy.user.phone_number if pharmacy.user.phone_number else '',
+                'opening_time': str(pharmacy.opening_time) if pharmacy.opening_time else '',
+                'closing_time': str(pharmacy.closing_time) if pharmacy.closing_time else '',
+            })
+
+    return JsonResponse({
+        'pharmacies': nearby_pharmacies,
+        'user_location': {
+            'latitude': user_lat,
+            'longitude': user_lng
+        },
+        'search_radius': max_distance
+    })

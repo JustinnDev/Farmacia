@@ -32,3 +32,11 @@ def pharmacy_context(request):
             'cart_items_count': cart_items_count,
         }
     return {}
+
+
+def mapbox_api_key(request):
+    """Context processor para la API key de Mapbox"""
+    from django.conf import settings
+    return {
+        'mapbox_api_key': getattr(settings, 'MAPBOX_API_KEY', ''),
+    }

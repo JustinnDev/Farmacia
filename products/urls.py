@@ -13,4 +13,5 @@ urlpatterns = [
     path('<int:product_id>/delete/', views.product_delete, name='product_delete'),
     path('pharmacy/products/', views.pharmacy_products, name='pharmacy_products'),
     path('autocomplete/', views.autocomplete, name='autocomplete'),
+    path('nearby-pharmacies/', views.nearby_pharmacies, name='nearby_pharmacies'),
 ]
