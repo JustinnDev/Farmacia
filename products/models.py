@@ -37,7 +37,7 @@ class Product(models.Model):
     requires_prescription = models.BooleanField(default=False, verbose_name='Requiere Receta')
 
     # Images
-    main_image = models.ImageField(upload_to='products/', verbose_name='Imagen Principal')
+    main_image = models.URLField(verbose_name='Imagen Principal')
     additional_images = models.ManyToManyField('ProductImage', blank=True, related_name='products', verbose_name='Imágenes Adicionales')
 
     # Metadata

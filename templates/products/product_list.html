@@ -616,7 +616,7 @@ function updateMap() {
                     <div class="col-md-4 mb-4">
                         <div class="card h-100">
                             {% if product.main_image %}
-                                <img src="{{ product.main_image.url }}" class="card-img-top" alt="{{ product.name }}"
+                                <img src="{{ product.main_image }}" class="card-img-top" alt="{{ product.name }}"
                                      style="height: 200px; object-fit: cover;">
                             {% else %}
                                 <div class="card-img-top bg-light d-flex align-items-center justify-content-center"

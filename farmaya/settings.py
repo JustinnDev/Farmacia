@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken',
     'users',
     'pharmacy',
     'products',
@@ -161,4 +163,28 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Mapbox settings
 MAPBOX_API_KEY = os.getenv('MAP_BOX_API_KEY')
+
+# Django REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+}
+
+# CSRF exemption for API endpoints (since they use token auth)
+CSRF_TRUSTED_ORIGINS = [
+    'https://justinalmao.pythonanywhere.com',
+    'http://localhost:8000',
+]
+
+# Exempt API URLs from CSRF protection
+CSRF_EXEMPT_URLS = [
+    r'^/api/',
+]
 

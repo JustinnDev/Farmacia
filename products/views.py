@@ -7,9 +7,16 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_GET
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from django.conf import settings
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from .models import Product, Category
 from .forms import ProductForm, ProductVariantFormSet, ProductImageFormSet
+from .serializers import ProductSerializer
 from users.models import PharmacyProfile
 from users.decorators import pharmacy_required
 from users.utils import calculate_distance
@@ -364,3 +371,40 @@ def nearby_pharmacies(request):
         },
         'search_radius': max_distance
     })
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ProductViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para gestión de productos por farmacias vía API.
+    Solo permite a las farmacias gestionar sus propios productos.
+    """
+    serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Product.objects.all()  # Necesario para el router
+
+    def get_queryset(self):
+        """Filtrar productos solo de la farmacia autenticada"""
+        try:
+            pharmacy = self.request.user.pharmacy_profile
+            return Product.objects.filter(pharmacy=pharmacy)
+        except AttributeError:
+            # User doesn't have pharmacy_profile
+            return Product.objects.none()
+
+    def perform_create(self, serializer):
+        """Asignar automáticamente la farmacia al crear un producto"""
+        serializer.save(pharmacy=self.request.user.pharmacy_profile)
+
+    def perform_update(self, serializer):
+        """Asegurar que solo se actualicen productos de la farmacia propia"""
+        instance = self.get_object()
+        if instance.pharmacy != self.request.user.pharmacy_profile:
+            raise PermissionError("No tienes permiso para modificar este producto")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        """Asegurar que solo se eliminen productos de la farmacia propia"""
+        if instance.pharmacy != self.request.user.pharmacy_profile:
+            raise PermissionError("No tienes permiso para eliminar este producto")
+        instance.delete()

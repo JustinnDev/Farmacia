@@ -172,3 +172,28 @@ def pharmacy_dashboard(request):
     }
 
     return render(request, 'users/pharmacy_dashboard.html', context)
+
+
+@pharmacy_required
+def api_documentation(request):
+    """Vista de documentación de la API solo para farmacias"""
+    pharmacy = get_object_or_404(PharmacyProfile, user=request.user)
+
+    # Obtener el token de API del usuario actual
+    from rest_framework.authtoken.models import Token
+    token, created = Token.objects.get_or_create(user=request.user)
+
+    # Leer el contenido del archivo de documentación
+    try:
+        with open('API_DOCUMENTATION.md', 'r', encoding='utf-8') as f:
+            documentation_content = f.read()
+    except FileNotFoundError:
+        documentation_content = "Documentación no encontrada."
+
+    context = {
+        'pharmacy': pharmacy,
+        'documentation_content': documentation_content,
+        'api_token': token.key,
+    }
+
+    return render(request, 'users/api_documentation.html', context)

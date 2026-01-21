@@ -21,6 +21,7 @@ class ProductForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'rows': 3}),
             'price': forms.NumberInput(attrs={'step': '0.01', 'placeholder': 'Precio en USD'}),
             'original_price': forms.NumberInput(attrs={'step': '0.01', 'placeholder': 'Precio original en USD'}),
+            'main_image': forms.URLInput(attrs={'placeholder': 'URL de la imagen'}),
         }
 
     def __init__(self, *args, **kwargs):

@@ -11,4 +11,5 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('pharmacy/<int:pharmacy_id>/', views.pharmacy_detail, name='pharmacy_detail'),
     path('pharmacy/dashboard/', views.pharmacy_dashboard, name='pharmacy_dashboard'),
+    path('pharmacy/api-docs/', views.api_documentation, name='api_documentation'),
 ]

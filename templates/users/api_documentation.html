@@ -1,0 +1,603 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}API Documentation - {{ pharmacy.pharmacy_name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+:root {
+    --api-primary: #2563eb;
+    --api-secondary: #64748b;
+    --api-success: #10b981;
+    --api-warning: #f59e0b;
+    --api-danger: #ef4444;
+    --api-dark: #1e293b;
+    --api-light: #f8fafc;
+    --api-border: #e2e8f0;
+}
+
+.api-hero {
+    background: linear-gradient(135deg, var(--api-primary) 0%, #1d4ed8 100%);
+    color: white;
+    padding: 3rem 0;
+    margin: -1rem -1rem 2rem -1rem;
+    border-radius: 0 0 2rem 2rem;
+}
+
+.api-hero h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.api-hero p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.api-section {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--api-border);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.api-section-header {
+    background: var(--api-light);
+    border-bottom: 1px solid var(--api-border);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.api-section-header i {
+    font-size: 1.5rem;
+    color: var(--api-primary);
+}
+
+.api-section-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--api-dark);
+}
+
+.api-section-content {
+    padding: 2rem;
+}
+
+.api-token-card {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.api-token-card h4 {
+    color: #92400e;
+    margin-bottom: 1rem;
+}
+
+.api-token-input {
+    background: white;
+    border: 1px solid #d97706;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.api-endpoint {
+    background: var(--api-dark);
+    color: #e2e8f0;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    margin: 1rem 0;
+    border: 1px solid #374151;
+}
+
+.api-method {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-right: 1rem;
+}
+
+.api-method.get { background: var(--api-success); color: white; }
+.api-method.post { background: var(--api-primary); color: white; }
+.api-method.put { background: var(--api-warning); color: black; }
+.api-method.patch { background: #8b5cf6; color: white; }
+.api-method.delete { background: var(--api-danger); color: white; }
+
+.api-params-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+
+.api-params-table th {
+    background: var(--api-light);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--api-border);
+    font-weight: 600;
+    color: var(--api-dark);
+}
+
+.api-params-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--api-border);
+    vertical-align: top;
+}
+
+.api-params-table .required {
+    color: var(--api-danger);
+    font-weight: 600;
+}
+
+.api-code-example {
+    background: var(--api-dark);
+    color: #e2e8f0;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    margin: 1rem 0;
+    border: 1px solid #374151;
+    overflow-x: auto;
+}
+
+.api-alert {
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+    border-left: 4px solid;
+}
+
+.api-alert.warning {
+    background: #fef3c7;
+    border-color: var(--api-warning);
+    color: #92400e;
+}
+
+.api-alert.info {
+    background: #dbeafe;
+    border-color: var(--api-primary);
+    color: #1e40af;
+}
+
+.api-steps {
+    counter-reset: step-counter;
+}
+
+.api-step {
+    counter-increment: step-counter;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background: var(--api-light);
+    border-radius: 0.5rem;
+    border: 1px solid var(--api-border);
+}
+
+.api-step::before {
+    content: counter(step-counter);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    background: var(--api-primary);
+    color: white;
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.api-step h5 {
+    margin: 0 0 0.5rem 0;
+    color: var(--api-dark);
+    font-size: 1rem;
+}
+
+.api-step p {
+    margin: 0;
+    color: var(--api-secondary);
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .api-hero {
+        padding: 2rem 0;
+        margin: -1rem -1rem 1rem -1rem;
+    }
+
+    .api-hero h1 {
+        font-size: 2rem;
+    }
+
+    .api-section-content {
+        padding: 1.5rem;
+    }
+
+    .api-step {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="api-hero">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1><i class="fas fa-rocket me-3"></i>API de Integración</h1>
+                <p>Conecta tu sistema ERP con FarmaYa de forma segura y eficiente</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Token Section -->
+    <div class="api-token-card">
+        <h4><i class="fas fa-key me-2"></i>Tu Token de API</h4>
+        <p>Contacta al administrador del sistema para obtener tu token de autenticación personal.</p>
+        <input type="text" class="api-token-input" id="apiToken" readonly value="{{ api_token }}">
+        <button class="btn btn-warning" type="button" onclick="copyToken()">
+            <i class="fas fa-copy me-2"></i>Copiar Token
+        </button>
+    </div>
+
+    <!-- Health Check -->
+    <div class="api-section">
+        <div class="api-section-header">
+            <i class="fas fa-heartbeat"></i>
+            <h3>Verificar Estado de la API</h3>
+        </div>
+        <div class="api-section-content">
+            <div class="mb-4">
+                <span class="api-method get">GET</span>
+                <strong>Health Check</strong>
+                <div class="api-endpoint">/api/health/</div>
+                <p>Verifica que la API esté funcionando correctamente. No requiere autenticación.</p>
+                <div class="api-alert info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Prueba este endpoint primero:</strong> Úsalo para confirmar que tu conexión con la API funciona.
+                </div>
+            </div>
+
+            <h5 class="mb-3">Respuesta de Ejemplo</h5>
+            <div class="api-code-example">
+{
+    "status": "ok",
+    "message": "FarmaYa API is running",
+    "timestamp": "2024-01-16T18:43:00.000000Z",
+    "version": "1.0.0"
+}
+            </div>
+
+            <h5 class="mb-3 mt-4">Prueba con cURL</h5>
+            <div class="api-code-example">
+curl https://tu-dominio.com/api/health/
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Start -->
+    <div class="api-section">
+        <div class="api-section-header">
+            <i class="fas fa-play-circle"></i>
+            <h3>Inicio Rápido</h3>
+        </div>
+        <div class="api-section-content">
+            <div class="api-steps">
+                <div class="api-step">
+                    <div>
+                        <h5>Verifica la Conexión</h5>
+                        <p>Primero confirma que la API esté funcionando con el endpoint de health check.</p>
+                    </div>
+                </div>
+                <div class="api-step">
+                    <div>
+                        <h5>Obtén tu Token</h5>
+                        <p>Contacta al soporte técnico para recibir tu token de autenticación único.</p>
+                    </div>
+                </div>
+                <div class="api-step">
+                    <div>
+                        <h5>Configura tus Headers</h5>
+                        <p>Incluye el token en todas tus peticiones HTTP.</p>
+                        <div class="api-endpoint">
+Authorization: Token TU_TOKEN_AQUI
+                        </div>
+                    </div>
+                </div>
+                <div class="api-step">
+                    <div>
+                        <h5>¡Comienza a Integrar!</h5>
+                        <p>Usa los endpoints de la API para sincronizar productos y órdenes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products API -->
+    <div class="api-section">
+        <div class="api-section-header">
+            <i class="fas fa-boxes"></i>
+            <h3>Gestión de Productos</h3>
+        </div>
+        <div class="api-section-content">
+            <div class="mb-4">
+                <span class="api-method get">GET</span>
+                <strong>Listar Productos</strong>
+                <div class="api-endpoint">/api/products/</div>
+                <p>Retorna todos los productos de tu farmacia con su información completa.</p>
+            </div>
+
+            <div class="mb-4">
+                <span class="api-method post">POST</span>
+                <strong>Crear Producto</strong>
+                <div class="api-endpoint">/api/products/</div>
+                <table class="api-params-table">
+                    <thead>
+                        <tr>
+                            <th>Campo</th>
+                            <th>Tipo</th>
+                            <th>Requerido</th>
+                            <th>Descripción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>name</code></td>
+                            <td>string</td>
+                            <td><span class="required">Sí</span></td>
+                            <td>Nombre del producto</td>
+                        </tr>
+                        <tr>
+                            <td><code>price</code></td>
+                            <td>decimal</td>
+                            <td><span class="required">Sí</span></td>
+                            <td>Precio en USD</td>
+                        </tr>
+                        <tr>
+                            <td><code>stock_quantity</code></td>
+                            <td>integer</td>
+                            <td><span class="required">Sí</span></td>
+                            <td>Cantidad en inventario</td>
+                        </tr>
+                        <tr>
+                            <td><code>description</code></td>
+                            <td>string</td>
+                            <td>No</td>
+                            <td>Descripción detallada</td>
+                        </tr>
+                        <tr>
+                            <td><code>requires_prescription</code></td>
+                            <td>boolean</td>
+                            <td>No</td>
+                            <td>Requiere receta médica</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mb-4">
+                <span class="api-method put">PUT</span>
+                <strong>Actualizar Producto</strong>
+                <div class="api-endpoint">/api/products/{id}/</div>
+                <p>Actualiza la información de un producto existente. Solo envía los campos que deseas modificar.</p>
+            </div>
+
+            <div class="mb-4">
+                <span class="api-method delete">DELETE</span>
+                <strong>Eliminar Producto</strong>
+                <div class="api-endpoint">/api/products/{id}/</div>
+                <p>Elimina un producto de tu inventario.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders API -->
+    <div class="api-section">
+        <div class="api-section-header">
+            <i class="fas fa-clipboard-list"></i>
+            <h3>Gestión de Órdenes</h3>
+        </div>
+        <div class="api-section-content">
+            <div class="mb-4">
+                <span class="api-method get">GET</span>
+                <strong>Listar Órdenes</strong>
+                <div class="api-endpoint">/api/orders/</div>
+                <p>Obtén todas las órdenes de tu farmacia con detalles completos.</p>
+            </div>
+
+            <div class="mb-4">
+                <span class="api-method patch">PATCH</span>
+                <strong>Confirmar Orden</strong>
+                <div class="api-endpoint">/api/orders/{id}/confirm/</div>
+                <p>Confirma una orden pagada y reduce automáticamente el stock de los productos.</p>
+                <div class="api-alert warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Importante:</strong> Solo funciona con órdenes en estado 'paid'. El stock se descuenta automáticamente.
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <span class="api-method patch">PATCH</span>
+                <strong>Actualizar Estado</strong>
+                <div class="api-endpoint">/api/orders/{id}/</div>
+                <p>Cambia el estado de una orden.</p>
+                <p><strong>Estados válidos:</strong> <code>confirmed</code>, <code>preparing</code>, <code>ready_for_delivery</code></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Code Examples -->
+    <div class="api-section">
+        <div class="api-section-header">
+            <i class="fas fa-code"></i>
+            <h3>Ejemplos de Código</h3>
+        </div>
+        <div class="api-section-content">
+            <h5 class="mb-3">Python con requests</h5>
+            <div class="api-code-example">
+import requests
+
+# Configurar headers con token
+headers = {'Authorization': 'Token TU_TOKEN'}
+
+# Listar productos
+response = requests.get('https://tu-dominio.com/api/products/', headers=headers)
+productos = response.json()
+
+# Crear producto
+nuevo_producto = {
+    'name': 'Paracetamol 500mg',
+    'price': '5.99',
+    'stock_quantity': 100,
+    'description': 'Analgésico y antipirético'
+}
+response = requests.post('https://tu-dominio.com/api/products/',
+                        json=nuevo_producto, headers=headers)
+
+# Confirmar orden
+response = requests.patch('https://tu-dominio.com/api/orders/123/confirm/',
+                         headers=headers)
+            </div>
+
+            <h5 class="mb-3 mt-4">cURL</h5>
+            <div class="api-code-example">
+# Listar productos
+curl -H "Authorization: Token TU_TOKEN" \
+  https://tu-dominio.com/api/products/
+
+# Crear producto
+curl -X POST \
+  -H "Authorization: Token TU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Paracetamol","price":"5.99","stock_quantity":100}' \
+  https://tu-dominio.com/api/products/
+
+# Confirmar orden
+curl -X PATCH \
+  -H "Authorization: Token TU_TOKEN" \
+  https://tu-dominio.com/api/orders/123/confirm/
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Codes -->
+    <div class="api-section">
+        <div class="api-section-header">
+            <i class="fas fa-exclamation-circle"></i>
+            <h3>Códigos de Respuesta</h3>
+        </div>
+        <div class="api-section-content">
+            <table class="api-params-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>200 OK</code></td>
+                        <td>Petición exitosa</td>
+                    </tr>
+                    <tr>
+                        <td><code>201 Created</code></td>
+                        <td>Recurso creado exitosamente</td>
+                    </tr>
+                    <tr>
+                        <td><code>400 Bad Request</code></td>
+                        <td>Datos inválidos o acción no permitida</td>
+                    </tr>
+                    <tr>
+                        <td><code>401 Unauthorized</code></td>
+                        <td>Token inválido o faltante</td>
+                    </tr>
+                    <tr>
+                        <td><code>403 Forbidden</code></td>
+                        <td>No tienes permisos para este recurso</td>
+                    </tr>
+                    <tr>
+                        <td><code>404 Not Found</code></td>
+                        <td>Recurso no encontrado</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Support -->
+    <div class="api-section">
+        <div class="api-section-header">
+            <i class="fas fa-life-ring"></i>
+            <h3>Soporte Técnico</h3>
+        </div>
+        <div class="api-section-content">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-envelope me-2"></i>Contacto</h5>
+                    <p>Email: <strong>soporte@farmaya.com</strong></p>
+                    <p>Teléfono: <strong>+58 212 123 4567</strong></p>
+                </div>
+                <div class="col-md-6">
+                    <h5><i class="fas fa-tools me-2"></i>Herramientas Recomendadas</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fab fa-python me-2"></i>Python + requests</li>
+                        <li><i class="fas fa-terminal me-2"></i>cURL</li>
+                        <li><i class="fas fa-rocket me-2"></i>Postman</li>
+                        <li><i class="fas fa-code me-2"></i>Insomnia</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToken() {
+    const tokenInput = document.getElementById('apiToken');
+    tokenInput.select();
+    document.execCommand('copy');
+
+    // Mostrar feedback
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check me-2"></i>Copiado!';
+    btn.classList.remove('btn-warning');
+    btn.classList.add('btn-success');
+
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-warning');
+    }, 2000);
+}
+</script>
+{% endblock %}

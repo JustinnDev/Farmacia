@@ -3,10 +3,17 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from datetime import timedelta
 from decimal import Decimal
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from .models import MasterOrder, Order, OrderItem, Payment, Delivery, Review
 from .forms import OrderForm, PaymentForm, ReviewForm
+from .serializers import OrderSerializer
 from .cart import Cart
 from products.models import Product
 from users.models import ClientProfile
@@ -405,4 +412,51 @@ def review_order(request, order_id):
         'form': form,
         'order': order,
     })
-    return redirect('orders:order_detail', order_id=order.id)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class OrderViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para gestión de órdenes por farmacias vía API.
+    Solo permite a las farmacias gestionar sus propias órdenes.
+    """
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Order.objects.all()  # Necesario para el router
+
+    def get_queryset(self):
+        """Filtrar órdenes solo de la farmacia autenticada"""
+        try:
+            pharmacy = self.request.user.pharmacy_profile
+            return Order.objects.filter(pharmacy=pharmacy)
+        except AttributeError:
+            # User doesn't have pharmacy_profile
+            return Order.objects.none()
+
+    @action(detail=True, methods=['patch'])
+    def confirm(self, request, pk=None):
+        """Acción específica para confirmar una orden"""
+        order = self.get_object()
+        if order.order_status != 'paid':
+            return Response(
+                {'error': 'Solo se pueden confirmar órdenes pagadas'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        order.order_status = 'confirmed'
+        order.save()
+
+        # Descontar stock automáticamente
+        for item in order.items.all():
+            product = item.product
+            if product.stock_quantity >= item.quantity:
+                product.stock_quantity -= item.quantity
+                product.save()
+            else:
+                return Response(
+                    {'error': f'Stock insuficiente para {product.name}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)
