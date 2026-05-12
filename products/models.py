@@ -45,7 +45,7 @@ class Product(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Actualizado el')
     is_active = models.BooleanField(default=True, verbose_name='Activo')
 
-    class Meta:
+    class Meta: 
         verbose_name = 'Producto'
         verbose_name_plural = 'Productos'
         ordering = ['-created_at']
@@ -87,7 +87,7 @@ class Product(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images', verbose_name='Producto')
-    image = models.ImageField(upload_to='products/additional/', verbose_name='Imagen')
+    image = models.ImageField(upload_to='products/', verbose_name='Imagen')
     alt_text = models.CharField(max_length=200, blank=True, verbose_name='Texto Alternativo')
     order = models.PositiveIntegerField(default=0, verbose_name='Orden')
 
